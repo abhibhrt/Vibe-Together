@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { FaMusic } from 'react-icons/fa';
 import api from '@/utils/api';
-import PlayerPopup from './play.music';
 import DeleteMusic from './remove.music';
 import { useUserStore } from '@/store/useUserStore';
+import { useSongStore } from '@/store/useSongStore';
 
 export default function ListMusic({ searchQuery }) {
   const [musicList, setMusicList] = useState([]);
@@ -14,7 +14,7 @@ export default function ListMusic({ searchQuery }) {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const { user } = useUserStore();
-  const [popupMusic, setPopupMusic] = useState(null);
+  const { setSong } = useSongStore();
 
   const containerRef = useRef(null);
 
@@ -82,13 +82,13 @@ export default function ListMusic({ searchQuery }) {
     >
       <div className='flex items-center space-x-4'>
         <div className='relative'>
-          <div onClick={() => setPopupMusic(music)} className='w-16 h-16 bg-gradient-to-br from-purple-600 to-red-600 rounded-xl flex items-center justify-center'>
+          <div onClick={() => setSong(music)} className='w-16 h-16 bg-gradient-to-br from-purple-600 to-red-600 rounded-xl flex items-center justify-center'>
             <FaMusic className='text-white text-xl' />
           </div>
         </div>
 
         <div className='flex-1 min-w-0'>
-          <h3 onClick={() => setPopupMusic(music)} className='text-white font-semibold truncate'>
+          <h3 onClick={() => setSong(music)} className='text-white font-semibold truncate'>
             {music.music_name}
           </h3>
 
@@ -136,13 +136,6 @@ export default function ListMusic({ searchQuery }) {
           </div>
         )}
       </div>
-
-      {popupMusic && (
-        <PlayerPopup
-          music={popupMusic}
-          onClose={() => setPopupMusic(null)}
-        />
-      )}
     </>
   );
 }

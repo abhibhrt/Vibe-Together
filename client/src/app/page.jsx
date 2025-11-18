@@ -5,8 +5,11 @@ import { FaUser, FaMusic, FaList, FaUsers, FaComment, FaCog } from 'react-icons/
 import Profile from './components/profile/main.profile';
 import Home from './components/home/main.home';
 import MainMusic from './components/music/main.music';
+import PlayerPopup from './components/music/play.music';
+import { useSongStore } from '@/store/useSongStore';
 
 export default function UserDashboard() {
+    const { song } = useSongStore();
     const [activeTab, setActiveTab] = useState('music');
 
     const renderContent = () => {
@@ -108,8 +111,8 @@ export default function UserDashboard() {
                                 key={item.id}
                                 onClick={() => setActiveTab(item.id)}
                                 className={`flex flex-col items-center p-2 rounded-lg transition-all duration-200 ${isActive
-                                        ? 'bg-gradient-to-b from-purple-600 to-red-600 text-white transform -translate-y-1'
-                                        : 'text-purple-300 hover:text-white hover:bg-gray-700'
+                                    ? 'bg-gradient-to-b from-purple-600 to-red-600 text-white transform -translate-y-1'
+                                    : 'text-purple-300 hover:text-white hover:bg-gray-700'
                                     }`}
                             >
                                 <Icon className="text-lg mb-1" />
@@ -118,6 +121,11 @@ export default function UserDashboard() {
                     })}
                 </div>
             </div>
+            {song && (
+                <PlayerPopup
+                    music={song}
+                />
+            )}
         </div>
     );
 }
