@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { FaPlay, FaPause, FaMusic } from 'react-icons/fa';
 import api from '@/utils/api';
 import PlayerPopup from './play.music';
+import DeleteMusic from './remove.music';
 
 export default function ListMusic({ searchQuery }) {
   const [musicList, setMusicList] = useState([]);
@@ -75,17 +76,16 @@ export default function ListMusic({ searchQuery }) {
   const renderItem = (music, index) => (
     <div
       key={music._id}
-      onClick={() => setPopupMusic(music)}
       className='bg-gray-800/70 cursor-pointer backdrop-blur-lg rounded-2xl p-4 border border-purple-500/30 hover:border-purple-500/50 transition-all duration-300 animate-fade-in'
       style={{ animationDelay: `${index * 0.06}s` }}
     >
       <div className='flex items-center space-x-4'>
         <div className='relative'>
-          <div className='w-16 h-16 bg-gradient-to-br from-purple-600 to-red-600 rounded-xl flex items-center justify-center'>
+          <div onClick={() => setPopupMusic(music)} className='w-16 h-16 bg-gradient-to-br from-purple-600 to-red-600 rounded-xl flex items-center justify-center'>
             <FaMusic className='text-white text-xl' />
           </div>
 
-          <button
+          {/* <button
             onClick={(e) => {
               e.stopPropagation();
               setPlayingId(prev => (prev === music._id ? null : music._id));
@@ -97,11 +97,11 @@ export default function ListMusic({ searchQuery }) {
             ) : (
               <FaPlay className='text-white text-lg ml-1' />
             )}
-          </button>
+          </button> */}
         </div>
 
         <div className='flex-1 min-w-0'>
-          <h3 className='text-white font-semibold truncate'>
+          <h3 onClick={() => setPopupMusic(music)}  className='text-white font-semibold truncate'>
             {music.music_name}
           </h3>
 
@@ -109,6 +109,12 @@ export default function ListMusic({ searchQuery }) {
             {music.singers?.join(', ') || 'unknown'}
           </p>
         </div>
+        <DeleteMusic
+          musicId={music._id}
+          publicId={music.public_id}
+          url={music.url}
+          onDeleted={() => fetchMusic(1)}
+        />
       </div>
     </div>
   );
