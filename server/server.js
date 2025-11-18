@@ -24,12 +24,14 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: true,  
+    origin: (origin, callback) => {
+      callback(null, origin || true)
+    },
     credentials: true,
-    methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS",
-    allowedHeaders: "*"
+    methods: 'get,post,put,patch,delete,options',
+    allowedHeaders: '*'
   })
-);
+)
 
 // Routes
 app.use('/api/user', AuthRoutes);
