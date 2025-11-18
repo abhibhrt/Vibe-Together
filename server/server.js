@@ -31,16 +31,24 @@ app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true)
+
       if (allowedOrigins.includes(origin)) {
         return callback(null, true)
       }
+
       return callback(new Error('not allowed by cors'))
     },
     credentials: true,
-    methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
-    allowedHeaders: '*'
+    methods: 'get,post,put,patch,delete,options',
+    allowedHeaders: [
+      'content-type',
+      'authorization',
+      'accept',
+      'x-requested-with'
+    ]
   })
 );
+
 
 // Routes
 app.use('/api/user', AuthRoutes);
