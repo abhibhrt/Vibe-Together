@@ -39,7 +39,7 @@ app.use(
       return callback(new Error('not allowed by cors'))
     },
     credentials: true,
-    methods: 'get,post,put,patch,delete,options',
+    methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
     allowedHeaders: [
       'content-type',
       'authorization',
