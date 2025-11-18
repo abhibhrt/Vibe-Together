@@ -22,13 +22,22 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+const allowedOrigins = [
+  'https://vibe-together.vercel.app',
+  'http://localhost:3000'
+]
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      callback(null, origin || true)
+      if (!origin) return callback(null, true)
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true)
+      }
+      return callback(new Error('not allowed by cors'))
     },
     credentials: true,
-    methods: 'get,post,put,patch,delete,options',
+    methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
     allowedHeaders: '*'
   })
 );
