@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { FaSearch, FaPlus } from 'react-icons/fa';
 import ListMusic from './list.music';
 import UploadMusic from './upload.music';
+import { useUserStore } from '@/store/useUserStore';
 
 export default function MainMusic() {
+    const { user } = useUserStore();
     const [activeTab, setActiveTab] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -25,11 +27,13 @@ export default function MainMusic() {
                             />
                         </div>
                     </div>
-                    <button
-                        onClick={() => setActiveTab(!activeTab)}
-                        className={` p-3 rounded-full transition-all duration-300 ${activeTab ? 'bg-purple-700' : 'bg-purple-900 hover:bg-purple-800'}`} >
-                        <FaPlus className={` text-white transition-transform duration-300  ${activeTab ? 'rotate-0' : 'rotate-135'}`} />
-                    </button>
+                    {
+                        user && (<button
+                            onClick={() => setActiveTab(!activeTab)}
+                            className={` p-3 rounded-full transition-all duration-300 ${activeTab ? 'bg-purple-700' : 'bg-purple-900 hover:bg-purple-800'}`} >
+                            <FaPlus className={` text-white transition-transform duration-300  ${activeTab ? 'rotate-0' : 'rotate-135'}`} />
+                        </button>)
+                    }
                 </div>
             </div>
             <div className="p-6">

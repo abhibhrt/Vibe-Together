@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { FaPlay, FaPause, FaMusic } from 'react-icons/fa';
+import { FaMusic } from 'react-icons/fa';
 import api from '@/utils/api';
 import PlayerPopup from './play.music';
 import DeleteMusic from './remove.music';
+import { useUserStore } from '@/store/useUserStore';
 
 export default function ListMusic({ searchQuery }) {
   const [musicList, setMusicList] = useState([]);
@@ -12,7 +13,7 @@ export default function ListMusic({ searchQuery }) {
   const [fetchFailed, setFetchFailed] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
-  const [playingId, setPlayingId] = useState(null);
+  const { user } = useUserStore();
   const [popupMusic, setPopupMusic] = useState(null);
 
   const containerRef = useRef(null);
@@ -84,24 +85,10 @@ export default function ListMusic({ searchQuery }) {
           <div onClick={() => setPopupMusic(music)} className='w-16 h-16 bg-gradient-to-br from-purple-600 to-red-600 rounded-xl flex items-center justify-center'>
             <FaMusic className='text-white text-xl' />
           </div>
-
-          {/* <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setPlayingId(prev => (prev === music._id ? null : music._id));
-            }}
-            className='absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300'
-          >
-            {playingId === music._id ? (
-              <FaPause className='text-white text-lg' />
-            ) : (
-              <FaPlay className='text-white text-lg ml-1' />
-            )}
-          </button> */}
         </div>
 
         <div className='flex-1 min-w-0'>
-          <h3 onClick={() => setPopupMusic(music)}  className='text-white font-semibold truncate'>
+          <h3 onClick={() => setPopupMusic(music)} className='text-white font-semibold truncate'>
             {music.music_name}
           </h3>
 
@@ -109,12 +96,16 @@ export default function ListMusic({ searchQuery }) {
             {music.singers?.join(', ') || 'unknown'}
           </p>
         </div>
-        <DeleteMusic
-          musicId={music._id}
-          publicId={music.public_id}
-          url={music.url}
-          onDeleted={() => fetchMusic(1)}
-        />
+        {
+          user && (
+            <DeleteMusic
+              musicId={music._id}
+              publicId={music.public_id}
+              url={music.url}
+              onDeleted={() => fetchMusic(1)}
+            />
+          )
+        }
       </div>
     </div>
   );

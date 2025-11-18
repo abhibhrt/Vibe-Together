@@ -4,7 +4,6 @@ import { removeMusicController } from '../controllers/music.controller/remove.mu
 import { getMusic } from '../controllers/music.controller/getresult.music.js';
 import { musicValidator } from '../validators/music.validator.js';
 import { validateRequest } from '../middlewares/validator.middleware.js';
-import { uploadMusic } from '../middlewares/upload.middleware.js';
 import { protect } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
@@ -12,7 +11,7 @@ const router = express.Router();
 /*
     Music Add Route: api/music/create
 */
-router.post('/create', protect, uploadMusic, validateRequest(musicValidator), addMusicController);
+router.post('/create', protect, validateRequest(musicValidator), addMusicController);
 
 /*
     Music Remove Route: api/music/remove/id

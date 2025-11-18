@@ -6,10 +6,6 @@ const musicSchema = new mongoose.Schema(
             type: String,
             required: true
         },
-        public_id: {
-            type: String,
-            required: true
-        },
         music_name: {
             type: String,
             required: true,
