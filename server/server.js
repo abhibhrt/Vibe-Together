@@ -31,7 +31,7 @@ app.use(
     methods: 'get,post,put,patch,delete,options',
     allowedHeaders: '*'
   })
-)
+);
 
 // Routes
 app.use('/api/user', AuthRoutes);
