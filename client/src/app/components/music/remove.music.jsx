@@ -34,7 +34,7 @@ export default function DeleteMusic({ musicId, publicId, url, onDeleted = () => 
       disabled={loading}
       className='text-red-400 text-xs underline hover:text-red-500 transition lowercase'
     >
-      {loading ? 'deleting...' : <FaTrash className='text-xl' />}
+      {loading ? 'deleting...' : <FaTrash className='text-lg' />}
     </button>
   );
 }

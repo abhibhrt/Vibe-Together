@@ -18,7 +18,23 @@ export default function ListMusic({ searchQuery }) {
 
   const containerRef = useRef(null);
 
-  // ========== fetch ==========
+  // extract youtube video id
+  const getYoutubeId = (url) => {
+    try {
+      if (!url) return null;
+
+      if (url.includes('youtu.be')) {
+        return url.split('youtu.be/')[1].split('?')[0];
+      }
+
+      const params = new URL(url).searchParams;
+      return params.get('v');
+    } catch {
+      return null;
+    }
+  };
+
+  // fetch music
   const fetchMusic = async (pageNum = 1) => {
     if (loading) return;
 
@@ -73,69 +89,97 @@ export default function ListMusic({ searchQuery }) {
     return () => container.removeEventListener('scroll', onScroll);
   }, [loading, hasMore, page]);
 
-  // item ui
-  const renderItem = (music, index) => (
-    <div
-      key={music._id}
-      className='bg-gray-800/70 cursor-pointer backdrop-blur-lg rounded-2xl p-4 border border-purple-500/30 hover:border-purple-500/50 transition-all duration-300 animate-fade-in'
-      style={{ animationDelay: `${index * 0.06}s` }}
-    >
-      <div className='flex items-center space-x-4'>
-        <div className='relative'>
-          <div onClick={() => setSong(music)} className='w-16 h-16 bg-gradient-to-br from-purple-600 to-red-600 rounded-xl flex items-center justify-center'>
-            <FaMusic className='text-white text-xl' />
+  // card ui
+  const renderItem = (music, index) => {
+    const videoId = getYoutubeId(music.url);
+    const thumbnail = videoId
+      ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+      : null;
+
+    return (
+      <div
+        key={music._id}
+        className='relative bg-gray-800/70 cursor-pointer backdrop-blur-lg rounded-2xl p-4 border border-purple-500/30 hover:border-purple-500/50 transition-all duration-300 animate-fade-in'
+        style={{ animationDelay: `${index * 0.06}s` }}
+      >
+        <div className='flex items-center space-x-4'>
+          {/* thumbnail */}
+          <div className='relative'>
+            <div
+              onClick={() => setSong(music)}
+              className='w-16 h-16 rounded-xl overflow-hidden bg-gray-700'
+            >
+              {thumbnail ? (
+                <img
+                  src={thumbnail}
+                  alt={music.music_name}
+                  className='w-full h-full object-cover'
+                />
+              ) : (
+                <div className='w-full h-full bg-gradient-to-br from-purple-600 to-red-600 flex items-center justify-center'>
+                  <FaMusic className='text-white text-xl' />
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className='flex-1 min-w-0'>
-          <h3 onClick={() => setSong(music)} className='text-white font-semibold truncate'>
-            {music.music_name}
-          </h3>
+          {/* title + singer */}
+          <div className='flex-1 min-w-0'>
+            <h3
+              onClick={() => setSong(music)}
+              className='text-white font-semibold truncate'
+            >
+              {music.music_name}
+            </h3>
 
-          <p className='text-purple-300 text-sm truncate'>
-            {music.singers?.join(', ') || 'unknown'}
-          </p>
-        </div>
-        {
-          user && (
+            <p className='text-purple-300 text-sm truncate'>
+              {music.singers?.join(', ') || 'unknown'}
+            </p>
+          </div>
+
+          {/* delete */}
+          {user && (
             <DeleteMusic
               musicId={music._id}
               publicId={music.public_id}
               url={music.url}
               onDeleted={() => fetchMusic(1)}
             />
-          )
-        }
+          )}
+        </div>
+
+        {/* youtube credit */}
+        <p className='absolute bottom-2 right-4 text-[10px] text-purple-400 opacity-70'>
+          source: youtube
+        </p>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
-    <>
-      <div
-        ref={containerRef}
-        className='music-container max-h-[calc(100vh-140px)] overflow-y-auto space-y-3'
-      >
-        {musicList.map((music, index) => renderItem(music, index))}
+    <div
+      ref={containerRef}
+      className='music-container max-h-[calc(100vh-140px)] overflow-y-auto space-y-3'
+    >
+      {musicList.map((music, index) => renderItem(music, index))}
 
-        {loading && (
-          <div className='flex justify-center py-6'>
-            <div className='w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin' />
-          </div>
-        )}
+      {loading && (
+        <div className='flex justify-center py-6'>
+          <div className='w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin' />
+        </div>
+      )}
 
-        {!hasMore && !loading && (
-          <div className='text-center py-6 text-purple-300'>
-            end of results
-          </div>
-        )}
+      {!hasMore && !loading && (
+        <div className='text-center py-6 text-purple-300'>
+          end of results
+        </div>
+      )}
 
-        {fetchFailed && (
-          <div className='text-center py-6 text-red-400 text-sm'>
-            failed to load music
-          </div>
-        )}
-      </div>
-    </>
+      {fetchFailed && (
+        <div className='text-center py-6 text-red-400 text-sm'>
+          failed to load music
+        </div>
+      )}
+    </div>
   );
 }
