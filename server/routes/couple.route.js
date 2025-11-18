@@ -1,5 +1,5 @@
 import express from 'express';
-import { createCoupleController } from '../controllers/couple.controller/createcouple.js';
+import { createCoupleController } from '../controllers/couple.controller/createCouple.js';
 import { removeCoupleController } from '../controllers/couple.controller/removeCouple.js';
 import { validateRequest } from '../middlewares/validator.middleware.js';
 import { coupleValidator } from '../validators/couple.validator.js';
