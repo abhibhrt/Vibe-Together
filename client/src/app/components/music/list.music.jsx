@@ -115,7 +115,7 @@ export default function ListMusic({ searchQuery }) {
           {/* thumbnail */}
           <div className='relative'>
             <div
-              onClick={() => setSong(music)}
+              onClick={() => handleSetMusic(music)}
               className='w-16 h-16 rounded-xl overflow-hidden bg-gray-700'
             >
               {thumbnail ? (
@@ -135,7 +135,7 @@ export default function ListMusic({ searchQuery }) {
           {/* title + singer */}
           <div className='flex-1 min-w-0'>
             <h3
-              onClick={() => setSong(music)}
+              onClick={() => handleSetSong(music)}
               className='text-white font-semibold truncate'
             >
               {music.music_name}
