@@ -68,10 +68,11 @@ export default function MiniPlayer({ music }) {
         },
         events: {
           onReady: (e) => {
-            setLoading(false)  // NEW → player ready → stop loader
+              // NEW → player ready → stop loader
             e.target.playVideo()
 
             setTimeout(() => {
+              setLoading(false)
               e.target.unMute()
             }, 1000)
           },
