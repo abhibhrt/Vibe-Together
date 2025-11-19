@@ -72,11 +72,11 @@ export default function MiniPlayer({ music }) {
             e.target.playVideo()
 
             setTimeout(() => {
-              setLoading(false)
               e.target.unMute()
             }, 1000)
           },
           onStateChange: (e) => {
+            setLoading(false)
             setPlaying(e.data === 1)
           }
         }
