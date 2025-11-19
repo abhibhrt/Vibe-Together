@@ -17,17 +17,21 @@ export default function MainChats() {
 
     return (
         <div className='flex'>
-            <div className='w-full md:w-96 bg-gray-800/70 backdrop-blur-lg border-r border-purple-500/30 flex flex-col'>
-                <div className='p-4 border-b border-purple-500/30'>
-                    <div className='relative'>
-                        <FaSearch className='absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400' />
-                        <input
-                            type='text'
-                            placeholder='search conversations...'
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className='w-full bg-gray-700/80 border border-purple-500/30 rounded-xl pl-10 pr-4 py-3 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300'
-                        />
+            <div className='w-full md:w-96 backdrop-blur-lg border-r border-purple-500/30 flex flex-col'>
+                <div className="p-4 border-b border-purple-500/30">
+                    <div className="flex items-center justify-between">
+                        <div className="flex-1 max-w-md mr-4">
+                            <div className="relative">
+                                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search Conversations"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full bg-gray-700/80 border border-purple-500/30 rounded-xl pl-10 pr-4 py-2 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div className='flex-1 overflow-y-auto'>
@@ -35,7 +39,7 @@ export default function MainChats() {
                         <div
                             key={chat.id}
                             onClick={() => openChat(chat)}
-                            className='flex items-center space-x-3 p-4 border-b border-purple-500/10 hover:bg-gray-700/50 transition-all duration-300 cursor-pointer group'
+                            className='flex bg-gray-800/70 items-center space-x-3 p-4 border-b border-purple-500/10 hover:bg-gray-700/50 transition-all duration-300 cursor-pointer group'
                         >
                             <div className='relative'>
                                 <div className='w-12 h-12 bg-gradient-to-br from-purple-600 to-red-600 rounded-full flex items-center justify-center group-hover:scale-105 transition-transform duration-300'>

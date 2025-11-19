@@ -45,8 +45,6 @@ export default function SignupPage({ handleBackUser }) {
         <div>
             <div className="w-full max-w-md animate-fade-in">
                 <div className="bg-gray-800/70 backdrop-blur-lg p-6 md:p-8 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/20">
-                    
-                    {/* Header */}
                     <div className="text-center mb-8">
                         <div className="flex justify-center space-x-2 mb-4">
                             {[1, 2, 3].map((i) => (
@@ -64,10 +62,7 @@ export default function SignupPage({ handleBackUser }) {
                             Join our musical world today
                         </p>
                     </div>
-
-                    {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Name Input */}
                         <div className="space-y-2">
                             <label htmlFor="name" className="text-sm font-medium text-purple-300 block flex items-center space-x-2">
                                 <FaUser className="text-purple-400" />
@@ -84,8 +79,6 @@ export default function SignupPage({ handleBackUser }) {
                                 required
                             />
                         </div>
-
-                        {/* Email Input */}
                         <div className="space-y-2">
                             <label htmlFor="email" className="text-sm font-medium text-purple-300 block flex items-center space-x-2">
                                 <FaEnvelope className="text-purple-400" />
@@ -102,8 +95,6 @@ export default function SignupPage({ handleBackUser }) {
                                 required
                             />
                         </div>
-
-                        {/* Password Input */}
                         <div className="space-y-2">
                             <label htmlFor="password" className="text-sm font-medium text-purple-300 block flex items-center space-x-2">
                                 <FaLock className="text-purple-400" />
@@ -120,8 +111,6 @@ export default function SignupPage({ handleBackUser }) {
                                 required
                             />
                         </div>
-
-                        {/* Sign Up Button */}
                         <button
                             type="submit"
                             disabled={isLoading}
@@ -139,13 +128,11 @@ export default function SignupPage({ handleBackUser }) {
                             ) : (
                                 <div className="flex items-center justify-center space-x-2">
                                     <FaHeart className="text-sm" />
-                                    <span>Begin Our Journey</span>
+                                    <span>Begin Your Journey</span>
                                 </div>
                             )}
                         </button>
                     </form>
-
-                    {/* Benefits */}
                     <div className="mt-6 grid grid-cols-2 gap-3 text-center">
                         {[
                             { icon: FaMusic, text: 'Unlimited Songs' },
@@ -162,8 +149,6 @@ export default function SignupPage({ handleBackUser }) {
                             </div>
                         ))}
                     </div>
-
-                    {/* Footer */}
                     <div className="mt-8 pt-6 border-t border-purple-500/30 text-center">
                         <p className="text-purple-300 text-sm">
                             Already have an account?{' '}
@@ -176,34 +161,13 @@ export default function SignupPage({ handleBackUser }) {
                         </p>
                     </div>
                 </div>
-
-                {/* Romantic Quote */}
                 <div className="text-center mt-6">
                     <p className="text-purple-400/70 text-sm italic animate-pulse">
                         "Every great love story starts with a beautiful beginning"
                     </p>
                 </div>
-
-                {/* Mobile Optimized Bottom Padding */}
                 <div className="h-8 md:h-0"></div>
             </div>
-
-            {/* Add CSS animations */}
-            <style jsx>{`
-                @keyframes fade-in {
-                    from { 
-                        opacity: 0; 
-                        transform: translateY(20px) scale(0.95); 
-                    }
-                    to { 
-                        opacity: 1; 
-                        transform: translateY(0) scale(1); 
-                    }
-                }
-                .animate-fade-in { 
-                    animation: fade-in 0.6s ease-out; 
-                }
-            `}</style>
         </div>
     );
 }

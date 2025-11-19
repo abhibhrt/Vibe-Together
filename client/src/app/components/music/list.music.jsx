@@ -106,7 +106,7 @@ export default function ListMusic({ searchQuery }) {
     return (
       <div
         key={music._id}
-        className='relative bg-gray-800/70 cursor-pointer backdrop-blur-lg rounded-2xl p-4 border border-purple-500/30 hover:border-purple-500/50 transition-all duration-300 animate-fade-in'
+        className='relative bg-gray-800/70 cursor-pointer backdrop-blur-lg p-4 border border-purple-500/30 hover:border-purple-500/50 transition-all duration-300 animate-fade-in'
         style={{ animationDelay: `${index * 0.06}s` }}
       >
         <div className='flex items-center space-x-4'>
@@ -166,7 +166,7 @@ export default function ListMusic({ searchQuery }) {
   return (
     <div
       ref={containerRef}
-      className='music-container max-h-[calc(100vh-140px)] overflow-y-auto space-y-3'
+      className='music-container max-h-[calc(100vh-140px)] overflow-y-auto'
     >
       {musicList.map((music, index) => renderItem(music, index))}
 

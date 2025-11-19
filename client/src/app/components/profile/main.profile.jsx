@@ -80,16 +80,10 @@ export default function Profile() {
   return (
     <div>
       <div className='w-full max-w-md space-y-6 animate-fade-in'>
-        {/* Profile Card */}
         <div className='bg-gray-800/70 backdrop-blur-lg p-6 shadow-2xl shadow-purple-500/20 transition-all duration-500 hover:shadow-purple-500/30'>
-          
-          {/* Avatar Section */}
           <div className='relative group mb-6'>
             <div className='relative w-32 h-32 mx-auto'>
-              {/* Animated Gradient Border */}
               <div className='absolute -inset-2 bg-gradient-to-r from-purple-600 to-red-600 rounded-full opacity-75 group-hover:opacity-100 blur transition-all duration-500 animate-pulse'></div>
-              
-              {/* Avatar Container */}
               <div className='relative w-32 h-32 bg-gradient-to-br from-purple-700 to-red-700 rounded-full flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105'>
                 {preview ? (
                   <img
@@ -109,8 +103,6 @@ export default function Profile() {
                   </span>
                 )}
               </div>
-
-              {/* Camera Button */}
               {editMode && (
                 <label className='absolute bottom-2 right-2 bg-gradient-to-r from-purple-600 to-red-600 p-2 rounded-full cursor-pointer transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-purple-500/50'>
                   <FaCamera className='text-white text-sm' />
@@ -124,8 +116,6 @@ export default function Profile() {
               )}
             </div>
           </div>
-
-          {/* Edit Mode */}
           {editMode ? (
             <div className='space-y-4 animate-slide-up'>
               <div className='space-y-3'>
@@ -146,7 +136,6 @@ export default function Profile() {
                   className='w-full p-4 rounded-xl bg-gray-700/80 border border-purple-500/30 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300'
                 />
               </div>
-
               <div className='space-y-2'>
                 <button
                   disabled={loading}
@@ -162,7 +151,6 @@ export default function Profile() {
                     'Save Changes'
                   )}
                 </button>
-
                 <button
                   onClick={() => {
                     setPreview(null);
@@ -175,7 +163,6 @@ export default function Profile() {
               </div>
             </div>
           ) : (
-            /* View Mode */
             <div className='text-center animate-fade-in'>
               <h2 className='text-white text-2xl font-bold bg-gradient-to-r from-purple-200 to-red-200 bg-clip-text text-transparent'>
                 {user?.name || 'Beautiful Soul'}
@@ -192,15 +179,13 @@ export default function Profile() {
             </div>
           )}
         </div>
-
-        {/* Romantic Stats */}
         <div className='grid grid-cols-3 gap-4 px-2'>
           {[
             { icon: FaMusic, label: 'Songs', value: '128', color: 'from-purple-500 to-pink-500' },
             { icon: FaHeart, label: 'Loved', value: '64', color: 'from-red-500 to-pink-500' },
             { icon: FaHistory, label: 'Hours', value: '89', color: 'from-purple-500 to-red-500' }
           ].map((stat, index) => (
-            <div 
+            <div
               key={stat.label}
               className='bg-gray-800/70 backdrop-blur-lg rounded-xl p-4 text-center border border-purple-500/20 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20 animate-slide-up'
               style={{ animationDelay: `${index * 0.1}s` }}
@@ -213,14 +198,11 @@ export default function Profile() {
             </div>
           ))}
         </div>
-
-        {/* Settings Menu */}
         <div className='bg-gray-800/70 backdrop-blur-lg p-6 animate-slide-up'>
           <h3 className='text-white font-semibold mb-4 text-lg flex items-center space-x-2'>
             <FaCog className='text-purple-400' />
             <span>Account Settings</span>
           </h3>
-
           <div className='space-y-3'>
             {[
               { icon: FaMusic, label: 'Subscription', desc: 'Premium Romance' },
@@ -245,23 +227,8 @@ export default function Profile() {
             ))}
             <SignOutPage />
           </div>
-
         </div>
       </div>
-
-      {/* Add CSS animations */}
-      <style jsx>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slide-up {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in { animation: fade-in 0.6s ease-out; }
-        .animate-slide-up { animation: slide-up 0.6s ease-out; }
-      `}</style>
     </div>
   );
 }

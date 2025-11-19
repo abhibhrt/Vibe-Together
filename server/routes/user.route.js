@@ -5,6 +5,8 @@ import { signinController } from '../controllers/user.controller/signin.js';
 import { signoutController } from '../controllers/user.controller/signout.js';
 import { meController } from '../controllers/user.controller/me.user.js';
 import { updateController } from '../controllers/user.controller/update.user.js';
+import { allUserController } from '../controllers/user.controller/all.user.js';
+
 import { validateRequest } from '../middlewares/validator.middleware.js';
 import { protect } from '../middlewares/auth.middleware.js';
 import { userValidatorSignUp, userValidatorSignIn } from '../validators/user.validator.js';
@@ -36,5 +38,10 @@ router.put('/update', protect, uploadAvatar, updateController);
     User Auth Check Route: api/user/me
 */
 router.get('/me', protect, meController);
+
+/*
+    User Auth Check Route: api/user/all
+*/
+router.get('/users-all', protect, allUserController);
 
 export default router;

@@ -1,15 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { FaUser, FaMusic, FaList, FaUsers, FaComment, FaCog } from 'react-icons/fa'
+import { FaUser, FaMusic, FaList, FaUsers, FaComment, FaGlobeAmericas, FaBell } from 'react-icons/fa'
 import Profile from './components/profile/main.profile'
 import MainMusic from './components/music/main.music'
 import PlayerPopup from './components/music/play.music'
-import { useSongStore } from '@/store/useSongStore'
 import ChatsSection from './components/chats/main.chats'
+import WarnComponent from './components/login-error'
+
+import { useSongStore } from '@/store/useSongStore'
 import { fetchUserUtil } from '@/utils/fetchuser.util.js'
 import { useUserStore } from '@/store/useUserStore'
-import WarnComponent from './components/login-error'
+import UsersList from './components/users/main.users'
 
 export default function UserDashboard() {
     const [activeTab, setActiveTab] = useState(() => {
@@ -38,27 +40,8 @@ export default function UserDashboard() {
             case 'music':
                 return <MainMusic />
 
-            case 'playlist':
-                return (
-                    <div className='space-y-6'>
-                        <div className='bg-gray-800 rounded-lg p-6'>
-                            <h2 className='text-white text-xl font-bold mb-4'>Your Playlists</h2>
-                            <div className='space-y-3'>
-                                {['Workout Mix', 'Chill Vibes', 'Road Trip', 'Party Time'].map((playlist, index) => (
-                                    <div key={playlist} className='flex items-center space-x-4 p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200'>
-                                        <div className='w-12 h-12 bg-gradient-to-br from-purple-600 to-red-600 rounded flex items-center justify-center'>
-                                            <FaList className='text-white' />
-                                        </div>
-                                        <div className='flex-1'>
-                                            <p className='text-white font-medium'>{playlist}</p>
-                                            <p className='text-purple-300 text-sm'>{index + 5} songs</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                )
+            case 'users':
+                return user ? <UsersList /> : <WarnComponent />
 
             case 'together':
                 return (
@@ -97,7 +80,7 @@ export default function UserDashboard() {
         { id: 'chats', icon: FaComment, label: 'Chats' },
         { id: 'profile', icon: FaUser, label: 'Profile' },
         { id: 'music', icon: FaMusic, label: 'Music' },
-        { id: 'playlist', icon: FaList, label: 'Playlists' },
+        { id: 'users', icon: FaGlobeAmericas, label: 'Users' },
         { id: 'together', icon: FaUsers, label: 'Together' }
     ]
 
@@ -105,10 +88,10 @@ export default function UserDashboard() {
         <div className='min-h-screen text-white pb-20 bg-gradient-to-br from-purple-900 via-gray-900 to-red-900'>
             <div className='bg-gray-800 p-4 flex justify-between items-center'>
                 <h1 className='text-xl font-bold bg-gradient-to-r from-purple-400 to-red-400 bg-clip-text text-transparent'>
-                    CloseMiles
+                    closemiles
                 </h1>
                 <button className='p-2 hover:bg-gray-700 rounded-lg transition-colors duration-200'>
-                    <FaCog className='text-purple-400' />
+                    <FaBell className='text-purple-400' />
                 </button>
             </div>
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link.js';
 import api from '@/utils/api.js';
 import { useUserStore } from '@/store/useUserStore.js';
 import { FaHeart, FaMusic, FaEnvelope, FaLock, FaArrowLeft } from 'react-icons/fa';
@@ -43,7 +42,6 @@ export default function SigninPage({ handleBackUser }) {
         <div className="">
             <div className="w-full max-w-md animate-fade-in">
                 <div className="bg-gray-800/70 backdrop-blur-lg p-6 md:p-8 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/20">
-                    {/* Header */}
                     <div className="text-center mb-8">
                         <div className="flex justify-center space-x-2 mb-4">
                             {[1, 2, 3].map((i) => (
@@ -61,10 +59,7 @@ export default function SigninPage({ handleBackUser }) {
                             Continue your musical journey with us
                         </p>
                     </div>
-
-                    {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Email Input */}
                         <div className="space-y-2">
                             <label htmlFor="email" className="text-sm font-medium text-purple-300 block flex items-center space-x-2">
                                 <FaEnvelope className="text-purple-400" />
@@ -81,8 +76,6 @@ export default function SigninPage({ handleBackUser }) {
                                 required
                             />
                         </div>
-
-                        {/* Password Input */}
                         <div className="space-y-2">
                             <label htmlFor="password" className="text-sm font-medium text-purple-300 block flex items-center space-x-2">
                                 <FaLock className="text-purple-400" />
@@ -99,8 +92,6 @@ export default function SigninPage({ handleBackUser }) {
                                 required
                             />
                         </div>
-
-                        {/* Sign In Button */}
                         <button
                             type="submit"
                             disabled={isLoading}
@@ -123,15 +114,11 @@ export default function SigninPage({ handleBackUser }) {
                             )}
                         </button>
                     </form>
-
-                    {/* Additional Links */}
                     <div className="mt-6 text-center">
                         <button className="text-sm text-purple-300 hover:text-white transition-colors duration-200 hover:underline">
                             Forgot your password?
                         </button>
                     </div>
-
-                    {/* Footer */}
                     <div className="mt-8 pt-6 border-t border-purple-500/30 text-center">
                         <p className="text-purple-300 text-sm">
                             Don't have an account?{' '}
@@ -144,34 +131,13 @@ export default function SigninPage({ handleBackUser }) {
                         </p>
                     </div>
                 </div>
-
-                {/* Romantic Quote */}
                 <div className="text-center mt-6">
                     <p className="text-purple-400/70 text-sm italic animate-pulse">
                         "Where every beat tells a love story"
                     </p>
                 </div>
-
-                {/* Mobile Optimized Bottom Padding */}
                 <div className="h-8 md:h-0"></div>
             </div>
-
-            {/* Add CSS animations */}
-            <style jsx>{`
-                @keyframes fade-in {
-                    from { 
-                        opacity: 0; 
-                        transform: translateY(20px) scale(0.95); 
-                    }
-                    to { 
-                        opacity: 1; 
-                        transform: translateY(0) scale(1); 
-                    }
-                }
-                .animate-fade-in { 
-                    animation: fade-in 0.6s ease-out; 
-                }
-            `}</style>
         </div>
     );
 }
