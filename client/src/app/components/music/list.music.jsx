@@ -77,7 +77,7 @@ export default function ListMusic({ searchQuery }) {
   setTimeout(() => {
     setTime(0); 
     setMusic(music);
-  }, 500);
+  }, 100);
 };
 
   // infinite scroll
@@ -135,7 +135,7 @@ export default function ListMusic({ searchQuery }) {
           {/* title + singer */}
           <div className='flex-1 min-w-0'>
             <h3
-              onClick={() => handleSetSong(music)}
+              onClick={() => handleSetMusic(music)}
               className='text-white font-semibold truncate'
             >
               {music.music_name}
