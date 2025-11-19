@@ -2,18 +2,14 @@
 
 import api from '@/utils/api';
 import { useEffect, useState } from 'react';
-import { FaUserPlus, FaCheck, FaSearch } from 'react-icons/fa';
+import { FaUserPlus, FaCheck, FaSearch, FaExclamation } from 'react-icons/fa';
 
-export default function UsersList() {
+export default function UsersList({ currUser }) {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
-
     const [friends, setFriends] = useState([]);
+    const [sending, setSending] = useState({});
     const [searchQuery, setSearchQuery] = useState('');
-
-    const addFriend = (userId) => {
-        setFriends(prev => [...prev, userId]);
-    };
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -30,13 +26,27 @@ export default function UsersList() {
         fetchUsers();
     }, []);
 
+    const addFriend = async (userId) => {
+        setSending(prev => ({ ...prev, [userId]: true }));
+
+        try {
+            await api.post('/api/couple/create', { receiver: userId });
+            setFriends(prev => [...prev, userId]);
+        } catch (error) {
+            console.error('Error adding friend:', error);
+            setSending(prev => ({ ...prev, [userId]: 'error' }));
+            setTimeout(() => {
+                setSending(prev => ({ ...prev, [userId]: false }));
+            }, 2000);
+        }
+    };
+
     const filteredUsers = users.filter(user =>
         user.name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
         <div className='max-w-full mx-auto'>
-            {/* search bar */}
             <div className='flex-1 max-w-md p-4 border-b border-purple-500/30'>
                 <div className='relative'>
                     <FaSearch className='absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400' />
@@ -50,20 +60,17 @@ export default function UsersList() {
                 </div>
             </div>
 
-            {/* header */}
             <div className='p-6'>
                 <h1 className='text-2xl font-bold text-white mb-2'>Welcome to Your Music</h1>
                 <p className='text-purple-200'>Discover and enjoy your favorite tracks</p>
             </div>
 
-            {/* loading */}
             {loading && (
                 <div className='flex justify-center py-6'>
-                    <div className='w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin' />
+                    <div className='w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin' />
                 </div>
             )}
 
-            {/* user list */}
             {!loading && (
                 <div className='max-h-[calc(100vh-200px)] overflow-y-auto'>
                     {filteredUsers.map((user) => (
@@ -72,7 +79,6 @@ export default function UsersList() {
                             className='bg-gray-800/70 backdrop-blur-lg p-4 border border-purple-500/30 flex items-center justify-between animate-fade-in'
                         >
                             <div className='flex items-center space-x-3'>
-                                {/* avatar */}
                                 <div className='w-12 h-12 bg-gradient-to-br from-purple-600 to-red-600 rounded-full flex items-center justify-center overflow-hidden'>
                                     {user.avatar?.url ? (
                                         <img
@@ -87,25 +93,33 @@ export default function UsersList() {
                                     )}
                                 </div>
 
-                                {/* name */}
                                 <span className='text-white font-medium'>{user.name}</span>
                             </div>
 
-                            {/* add friend button */}
-                            <button
-                                onClick={() => addFriend(user._id)}
-                                disabled={friends.includes(user._id)}
-                                className={`p-2 rounded-lg transition-all duration-300 ${friends.includes(user._id)
-                                    ? 'bg-green-500 text-white'
-                                    : 'bg-purple-600 text-white hover:bg-purple-700'
-                                    }`}
-                            >
-                                {friends.includes(user._id) ? <FaCheck /> : <FaUserPlus />}
-                            </button>
+                            {user._id !== currUser.id && (
+                                <button
+                                    onClick={() => addFriend(user._id)}
+                                    disabled={friends.includes(user._id) || sending[user._id]}
+                                    className='p-3 rounded-lg transition-all duration-300 disabled:cursor-not-allowed'
+                                >
+                                    {friends.includes(user._id) ? (
+                                        <div className='w-10 h-10 bg-green-500 rounded-full flex items-center justify-center'>
+                                            <FaCheck className='text-white text-xl' />
+                                        </div>
+                                    ) : sending[user._id] === 'error' ? (
+                                        <div className='w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center'>
+                                            <FaExclamation className='text-white text-xl' />
+                                        </div>
+                                    ) : (
+                                        <div className='w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center hover:bg-purple-700'>
+                                            <FaUserPlus className='text-white text-xl' />
+                                        </div>
+                                    )}
+                                </button>
+                            )}
                         </div>
                     ))}
 
-                    {/* no results */}
                     {filteredUsers.length === 0 && (
                         <div className='text-center text-purple-300 py-8'>
                             no users found matching

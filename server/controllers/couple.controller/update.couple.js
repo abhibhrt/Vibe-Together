@@ -1,14 +1,10 @@
 import Couple from '../../models/couple.model.js';
 
-export const createCoupleController = async (req, res) => {
+export const updateCoupleController = async (req, res) => {
     try {
-        const { user1, user2, couple_name } = req.parsed;
+        const { id } = req.params;
 
-        const couple = await Couple.create({
-            user1,
-            user2,
-            couple_name
-        });
+        const couple = await Couple.findByIdAndUpdate(id, { duplex: true }, { new: true });
 
         return res.status(201).json({
             message: 'couple created',

@@ -12,6 +12,7 @@ import { useSongStore } from '@/store/useSongStore'
 import { fetchUserUtil } from '@/utils/fetchuser.util.js'
 import { useUserStore } from '@/store/useUserStore'
 import UsersList from './components/users/main.users'
+import NotificationsSection from './components/notification/main.notification'
 
 export default function UserDashboard() {
     const [activeTab, setActiveTab] = useState(() => {
@@ -20,9 +21,9 @@ export default function UserDashboard() {
         }
         return 'music'
     })
-
     const { song } = useSongStore()
     const { user } = useUserStore()
+    
     fetchUserUtil()
 
     useEffect(() => {
@@ -40,8 +41,11 @@ export default function UserDashboard() {
             case 'music':
                 return <MainMusic />
 
+            case 'notification':
+                return user ? <NotificationsSection /> : <WarnComponent />
+
             case 'users':
-                return user ? <UsersList /> : <WarnComponent />
+                return user ? <UsersList currUser={user} /> : <WarnComponent />
 
             case 'together':
                 return (
@@ -86,12 +90,13 @@ export default function UserDashboard() {
 
     return (
         <div className='min-h-screen text-white pb-20 bg-gradient-to-br from-purple-900 via-gray-900 to-red-900'>
-            <div className='bg-gray-800 p-4 flex justify-between items-center'>
+            <div className='bg-gray-800 p-3 flex justify-between items-center'>
                 <h1 className='text-xl font-bold bg-gradient-to-r from-purple-400 to-red-400 bg-clip-text text-transparent'>
                     closemiles
                 </h1>
-                <button className='p-2 hover:bg-gray-700 rounded-lg transition-colors duration-200'>
-                    <FaBell className='text-purple-400' />
+                <button className={`p-2 rounded-xl ${activeTab === 'notification' ? 'bg-gradient-to-b from-purple-600 to-red-600 text-white' : ''
+                    }`}>
+                    <FaBell onClick={() => setActiveTab('notification')} className='text-xl' />
                 </button>
             </div>
 
@@ -107,8 +112,8 @@ export default function UserDashboard() {
                                 key={item.id}
                                 onClick={() => setActiveTab(item.id)}
                                 className={`flex flex-col items-center p-2 rounded-lg transition-all duration-200 ${isActive
-                                        ? 'bg-gradient-to-b from-purple-600 to-red-600 text-white transform -translate-y-1'
-                                        : 'text-purple-300 hover:text-white hover:bg-gray-700'
+                                    ? 'bg-gradient-to-b from-purple-600 to-red-600 text-white transform -translate-y-1'
+                                    : 'text-purple-300 hover:text-white hover:bg-gray-700'
                                     }`}
                             >
                                 <Icon className='text-lg mb-1' />
