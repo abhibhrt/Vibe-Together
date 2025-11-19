@@ -75,11 +75,9 @@ export default function ListMusic({ searchQuery }) {
   setMusic(null);
 
   setTimeout(() => {
-    setTime(0); 
     setMusic(music);
-  }, 100);
+  }, 100); // 100 ms
 };
-
   // infinite scroll
   useEffect(() => {
     const container = containerRef.current;
