@@ -70,7 +70,7 @@ export default function SelectedChats({ chatId }) {
                             <p className='text-sm'>{msg.text}</p>
                             <div className={`flex items-center justify-end space-x-1 mt-1 ${msg.isMe ? 'text-purple-200' : 'text-gray-400'}`}>
                                 <span className='text-xs'>{msg.time}</span>
-                                {msg.isMe && <FaCheck className='text-xs' />}
+                                {msg.isMe && <FaCheck className='text-green-500 text-xs' />}
                             </div>
                         </div>
                     </div>

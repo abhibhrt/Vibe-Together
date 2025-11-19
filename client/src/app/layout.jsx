@@ -39,7 +39,7 @@ export const metadata = {
     description: 'closemiles – connect, collaborate and explore with seamless proximity-based interactions.',
     images: ['/logo.png']
   },
-  manifest: '/manifest.json',
+  manifest: '/manifest.json'
 }
 
 export default function RootLayout({ children }) {
