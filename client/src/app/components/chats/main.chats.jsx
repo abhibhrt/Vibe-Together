@@ -16,13 +16,9 @@ export default function MainChats() {
     };
 
     return (
-        <div className='min-h-screen bg-gradient-to-br from-purple-900 via-gray-900 to-red-900 flex'>
+        <div className='flex'>
             <div className='w-full md:w-96 bg-gray-800/70 backdrop-blur-lg border-r border-purple-500/30 flex flex-col'>
                 <div className='p-4 border-b border-purple-500/30'>
-                    <div className='flex items-center justify-between mb-4'>
-                        <h1 className='text-xl font-bold bg-gradient-to-r from-purple-400 to-red-400 bg-clip-text text-transparent'>messages</h1>
-                        <button className='text-purple-300 hover:text-white transition-colors duration-300 p-2'><FaEllipsisV /></button>
-                    </div>
                     <div className='relative'>
                         <FaSearch className='absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400' />
                         <input

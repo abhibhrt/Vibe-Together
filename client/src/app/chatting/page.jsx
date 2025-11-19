@@ -1,12 +1,26 @@
-'use client';
+'use client'
 
-import { useSearchParams, useRouter } from 'next/navigation';
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import SelectedChats from '../components/chats/selected.chats';
 
-export default function ChattingPage() {
-    const searchParams = useSearchParams();
-    const router = useRouter();
-    const id = searchParams.get('id');
+function ChattingInner() {
+    const searchParams = useSearchParams()
+    const id = searchParams.get('id')
 
-    return <SelectedChats chatId={id} />;
+    return (
+        <SelectedChats
+            chatId={id}
+        />
+    )
+}
+
+export default function ChattingPage() {
+    return (
+        <Suspense fallback={
+            <div className="text-white p-4">loading...</div>
+        }>
+            <ChattingInner />
+        </Suspense>
+    )
 }
