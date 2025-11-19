@@ -72,11 +72,11 @@ export default function ListMusic({ searchQuery }) {
   }, [searchQuery]);
 
   const handleSetMusic = (music) => {
-  setMusic(null);
+  setSong(null);
 
   setTimeout(() => {
-    setMusic(music);
-  }, 100); // 100 ms
+    setSong(music);
+  }, 100);
 };
   // infinite scroll
   useEffect(() => {
