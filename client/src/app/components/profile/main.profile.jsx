@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useUserStore } from '@/store/useUserStore';
 import SigninPage from '../auth/signin.auth';
 import SignupPage from '../auth/signup.auth';
@@ -16,7 +16,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(user || {
     name: '',
     email: '',
     avatar: null,
@@ -25,26 +25,6 @@ export default function Profile() {
   function handleBackUser() {
     setBackuser(!backuser);
   }
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await api.get('/api/user/me');
-        if (res?.status === 200 && res?.data?.user) {
-          setUser(res.data.user);
-          setFormData({
-            name: res.data.user.name || '',
-            email: res.data.user.email || '',
-            avatar: null,
-          });
-        }
-      } catch {
-        console.log('error occurred');
-      }
-    };
-
-    fetchUser();
-  }, [setUser]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
