@@ -18,6 +18,9 @@ export default function MiniPlayer({ music }) {
   const [progress, setProgress] = useState(0)
   const [duration, setDuration] = useState(0)
 
+  // NEW → show loader until player ready
+  const [loading, setLoading] = useState(true)
+
   if (!music) return null
 
   const getVideoId = (url) => {
@@ -39,6 +42,7 @@ export default function MiniPlayer({ music }) {
 
   useEffect(() => {
     let mounted = true
+    setLoading(true) // NEW → whenever video changes, loader ON
 
     const createPlayer = () => {
       if (!mounted) return
@@ -64,6 +68,7 @@ export default function MiniPlayer({ music }) {
         },
         events: {
           onReady: (e) => {
+              // NEW → player ready → stop loader
             e.target.playVideo()
 
             setTimeout(() => {
@@ -71,6 +76,7 @@ export default function MiniPlayer({ music }) {
             }, 1000)
           },
           onStateChange: (e) => {
+            setLoading(false)
             setPlaying(e.data === 1)
           }
         }
@@ -112,7 +118,7 @@ export default function MiniPlayer({ music }) {
 
   const togglePlay = () => {
     const p = playerRef.current
-    if (!p) return
+    if (!p || loading) return
 
     const state = p.getPlayerState()
     if (state === 1) p.pauseVideo()
@@ -155,11 +161,19 @@ export default function MiniPlayer({ music }) {
             <FaStepBackward />
           </button>
 
+          {/* 🔥 Updated Play/Pause with spinner */}
           <button
             onClick={togglePlay}
-            className='bg-gradient-to-r from-purple-600 to-red-600 p-3 rounded-full hover:scale-105 transition transform shadow-md'
+            disabled={loading}
+            className='bg-gradient-to-r from-purple-600 to-red-600 p-3 rounded-full hover:scale-105 transition transform shadow-md disabled:opacity-50 disabled:cursor-not-allowed'
           >
-            {playing ? <FaPause /> : <FaPlay className='ml-1' />}
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : playing ? (
+              <FaPause />
+            ) : (
+              <FaPlay className='ml-1' />
+            )}
           </button>
 
           <button className='p-2 text-purple-300 hover:text-white'>
