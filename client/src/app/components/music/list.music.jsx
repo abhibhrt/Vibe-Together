@@ -8,14 +8,13 @@ import { useUserStore } from '@/store/useUserStore';
 import { usePlaybackStore, usePlaylistStore } from '@/store/useSongStore';
 
 export default function ListMusic({ searchQuery }) {
-  const [allMusic, setAllMusic] = useState([]);
   const [filteredMusic, setFilteredMusic] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchFailed, setFetchFailed] = useState(false);
 
   const { user } = useUserStore();
   const { setPlayingNow } = usePlaybackStore();
-  const { setAllSongs } = usePlaylistStore();
+  const { setAllSongs, allSongs } = usePlaylistStore();
 
   const getYoutubeId = (url) => {
     try {
@@ -36,7 +35,6 @@ export default function ListMusic({ searchQuery }) {
       const res = await api.get(`/api/musics/getall`);
 
       if (res?.data?.music) {
-        setAllMusic(res.data.music);
         setFilteredMusic(res.data.music);
         setAllSongs(res.data.music);
       } else {
@@ -51,19 +49,20 @@ export default function ListMusic({ searchQuery }) {
   };
 
   useEffect(() => {
-    fetchMusic();
+    if (allSongs.length === 0)
+      fetchMusic();
   }, []);
 
   // local filter (song name + singer name)
   useEffect(() => {
     if (!searchQuery) {
-      setFilteredMusic(allMusic);
+      setFilteredMusic(allSongs);
       return;
     }
 
     const q = searchQuery.toLowerCase();
 
-    const filtered = allMusic.filter((item) => {
+    const filtered = allSongs.filter((item) => {
       const nameMatch = item.music_name?.toLowerCase().includes(q);
 
       const singerMatch = Array.isArray(item.singers)
@@ -74,7 +73,7 @@ export default function ListMusic({ searchQuery }) {
     });
 
     setFilteredMusic(filtered);
-  }, [searchQuery, allMusic]);
+  }, [searchQuery, allSongs]);
 
   const handleSetMusic = (music) => {
     setPlayingNow(null);
