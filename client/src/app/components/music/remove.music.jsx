@@ -16,7 +16,7 @@ export default function DeleteMusic({ musicId, publicId, url, onDeleted = () => 
     try {
       setLoading(true);
 
-      await api.delete(`/api/music/remove/${musicId}`, {
+      await api.delete(`/api/musics/remove/${musicId}`, {
         data: { public_id: publicId, url }
       });
 

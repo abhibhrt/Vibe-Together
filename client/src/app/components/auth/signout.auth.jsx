@@ -18,7 +18,7 @@ export default function SignOutPage() {
         setIsLoading(true);
 
         try {
-            await api.post('/api/user/signout');
+            await api.post('/api/users/signout');
             setUser(null);
         } catch (error) {
             console.error(error);

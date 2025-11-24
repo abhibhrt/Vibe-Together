@@ -1,5 +1,5 @@
 import { deleteFromCloudinary, uploadBufferToCloudinary } from '../../config/cloudinary.config.js';
-import User from '../../models/user.model.js';
+import User from '../../models/users.model.js';
 
 export const updateController = async (req, res) => {
   try {

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const coupleSchema = new mongoose.Schema(
+const RequestsSchema = new mongoose.Schema(
     {
         sender: {
             type: mongoose.Schema.Types.ObjectId,
@@ -22,6 +22,6 @@ const coupleSchema = new mongoose.Schema(
     }
 );
 
-const Couple = mongoose.models.couple || mongoose.model('couple', coupleSchema);
+const Requests = mongoose.models.Requests || mongoose.model('Requests', RequestsSchema);
 
-export default Couple;
+export default Requests;

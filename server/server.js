@@ -7,10 +7,9 @@ import cookieParser from 'cookie-parser';
 
 import { connectDb } from './config/db.config.js';
 
-import AuthRoutes from './routes/user.route.js';
-import CoupleRoute from './routes/couple.route.js';
-import PlaylistRoute from './routes/playlist.route.js';
-import MusicRoute from './routes/music.route.js';
+import AuthRoutes from './routes/users.route.js';
+import RequestRoute from './routes/requests.route.js';
+import MusicRoute from './routes/musics.route.js';
 
 dotenv.config();
 const app = express();
@@ -51,10 +50,9 @@ app.use(
 
 
 // Routes
-app.use('/api/user', AuthRoutes);
-app.use('/api/couple', CoupleRoute);
-app.use('/api/playlist', PlaylistRoute);
-app.use('/api/music', MusicRoute);
+app.use('/api/users', AuthRoutes);
+app.use('/api/requests', RequestRoute);
+app.use('/api/musics', MusicRoute);
 
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'api running..' });

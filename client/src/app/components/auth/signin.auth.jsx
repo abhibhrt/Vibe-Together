@@ -17,7 +17,7 @@ export default function SigninPage({ handleBackUser }) {
         e.preventDefault();
         setIsLoading(true);
         try {
-            const res = await api.post('/api/user/signin', form);
+            const res = await api.post('/api/users/signin', form);
             setUser(res?.data?.user);
             setForm({
                 email: '',

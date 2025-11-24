@@ -10,7 +10,7 @@ export const fetchUserUtil = () => {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const res = await api.get('/api/user/me');
+                const res = await api.get('/api/users/getme');
                 if (res?.status === 200 && res?.data?.user) {
                     setUser(res.data.user);
                 }

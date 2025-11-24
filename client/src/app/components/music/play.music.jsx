@@ -9,7 +9,7 @@ import {
 } from 'react-icons/fa'
 import { useRef, useEffect, useState } from 'react'
 
-export default function MiniPlayer({ music }) {
+export default function MiniPlayer({ music, onMusicEnd, handlePrev, handleNext }) {
   const playerRef = useRef(null)
   const containerRef = useRef(null)
   const rafRef = useRef(null)
@@ -18,7 +18,6 @@ export default function MiniPlayer({ music }) {
   const [progress, setProgress] = useState(0)
   const [duration, setDuration] = useState(0)
 
-  // NEW → show loader until player ready
   const [loading, setLoading] = useState(true)
 
   if (!music) return null
@@ -27,6 +26,12 @@ export default function MiniPlayer({ music }) {
     if (!url) return null
     const idMatch = url.match(/(?:youtu\.be\/|v=)([A-Za-z0-9_-]{11})/)
     return idMatch ? idMatch[1] : null
+  }
+
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`
   }
 
   const videoId = getVideoId(music.url)
@@ -42,7 +47,7 @@ export default function MiniPlayer({ music }) {
 
   useEffect(() => {
     let mounted = true
-    setLoading(true) // NEW → whenever video changes, loader ON
+    setLoading(true)
 
     const createPlayer = () => {
       if (!mounted) return
@@ -68,7 +73,6 @@ export default function MiniPlayer({ music }) {
         },
         events: {
           onReady: (e) => {
-              // NEW → player ready → stop loader
             e.target.playVideo()
 
             setTimeout(() => {
@@ -78,6 +82,10 @@ export default function MiniPlayer({ music }) {
           onStateChange: (e) => {
             setLoading(false)
             setPlaying(e.data === 1)
+
+            if (e.data === 0 && onMusicEnd) {
+              onMusicEnd()
+            }
           }
         }
       })
@@ -100,7 +108,7 @@ export default function MiniPlayer({ music }) {
       }
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
-  }, [videoId])
+  }, [videoId, onMusicEnd])
 
   useEffect(() => {
     const tick = () => {
@@ -134,7 +142,7 @@ export default function MiniPlayer({ music }) {
   }
 
   return (
-    <div className='fixed bottom-16 left-0 w-full bg-gray-900 text-white p-3 shadow-xl border-t border-purple-700/40 flex flex-col z-50'>
+    <div className='fixed bottom-15 left-0 w-full bg-gray-900 text-white p-3 shadow-xl border-t border-purple-700/40 flex flex-col z-50'>
 
       <div className='absolute top-0 left-0 opacity-0 pointer-events-none'>
         <div ref={containerRef} className='w-0 h-0'></div>
@@ -157,11 +165,10 @@ export default function MiniPlayer({ music }) {
         </div>
 
         <div className='flex items-center gap-4'>
-          <button className='p-2 text-purple-300 hover:text-white'>
+          <button onClick={handlePrev} className='p-2 text-purple-300 hover:text-white'>
             <FaStepBackward />
           </button>
 
-          {/* 🔥 Updated Play/Pause with spinner */}
           <button
             onClick={togglePlay}
             disabled={loading}
@@ -176,20 +183,28 @@ export default function MiniPlayer({ music }) {
             )}
           </button>
 
-          <button className='p-2 text-purple-300 hover:text-white'>
+          <button onClick={handleNext} className='p-2 text-purple-300 hover:text-white'>
             <FaStepForward />
           </button>
         </div>
       </div>
 
-      <input
-        type='range'
-        min='0'
-        max={duration || 0}
-        value={progress}
-        onChange={handleSeek}
-        className='w-full mt-3 h-1 rounded-full appearance-none bg-gradient-to-r from-purple-600 to-red-600'
-      />
+      {/* Time Display Section */}
+      <div className='flex items-center justify-between w-full mt-2 text-xs text-purple-300'>
+        <span className='w-10 text-left'>{formatTime(progress)}</span>
+        <input
+          type='range'
+          min='0'
+          max={duration || 0}
+          value={progress}
+          onChange={handleSeek}
+          className='flex-1 mx-2 h-1 rounded-full appearance-none bg-gray-700 [&::-webkit-slider-thumb]:bg-red-500 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full'
+          style={{
+            background: `linear-gradient(to right, #A855F7 0%, #A855F7 ${(progress / duration) * 100}%, #4B5563 ${(progress / duration) * 100}%, #4B5563 100%)`
+          }}
+        />
+        <span className='w-10 text-right'>{formatTime(duration)}</span>
+      </div>
     </div>
   )
 }

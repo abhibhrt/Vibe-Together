@@ -1,4 +1,4 @@
-import User from '../../models/user.model.js';
+import User from '../../models/users.model.js';
 import { hashPassword } from '../../utils/hash.utils.js';
 import { assignJwt } from '../../utils/jwt.util.js';
 import { setAuthCookie } from '../../utils/cookie.util.js';

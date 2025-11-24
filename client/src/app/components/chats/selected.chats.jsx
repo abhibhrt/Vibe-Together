@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { FaPaperclip, FaMicrophone, FaSmile, FaPaperPlane, FaArrowLeft, FaEllipsisV, FaCheck } from 'react-icons/fa';
-import { CHAT_STATIC } from './chatstatic';
+import { useFriendsStore } from '../../../store/useFriendsStore';
 import Link from 'next/link';
 
 export default function SelectedChats({ chatId }) {
+    const { friends } = useFriendsStore();
     const [message, setMessage] = useState('');
-    const [chat, setChat] = useState(() => CHAT_STATIC.find(c => String(c.id) === String(chatId)) || CHAT_STATIC[0]);
+    const [chat, setChat] = useState(() => friends.find(c => String(c.id) === String(chatId)) || friends[0]);
     const messagesEndRef = useRef(null);
 
     useEffect(() => {

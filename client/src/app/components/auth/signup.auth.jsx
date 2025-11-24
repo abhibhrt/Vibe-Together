@@ -19,7 +19,7 @@ export default function SignupPage({ handleBackUser }) {
         e.preventDefault();
         setIsLoading(true);
         try {
-            const res = await api.post('/api/user/signup', form);
+            const res = await api.post('/api/users/signup', form);
             setUser(res?.data?.user);
             setForm({
                 name: '',

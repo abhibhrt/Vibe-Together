@@ -1,4 +1,4 @@
-import Music from '../../models/music.model.js';
+import Music from '../../models/musics.model.js';
 
 export const removeMusicController = async (req, res) => {
     try {

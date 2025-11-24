@@ -1,16 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { FaUser, FaMusic, FaList, FaUsers, FaComment, FaGlobeAmericas, FaBell } from 'react-icons/fa'
+import { FaUser, FaMusic, FaUsers, FaComment, FaGlobeAmericas, FaBell } from 'react-icons/fa'
 import Profile from './components/profile/main.profile'
 import MainMusic from './components/music/main.music'
 import PlayerPopup from './components/music/play.music'
 import ChatsSection from './components/chats/main.chats'
 import WarnComponent from './components/login-error'
 
-import { useSongStore } from '@/store/useSongStore'
+import { usePlaybackStore, usePlaylistStore } from '../store/useSongStore'
 import { fetchUserUtil } from '@/utils/fetchuser.util.js'
-import { useUserStore } from '@/store/useUserStore'
+import { useUserStore } from '../store/useUserStore'
 import UsersList from './components/users/main.users'
 import NotificationsSection from './components/notification/main.notification'
 
@@ -21,9 +21,24 @@ export default function UserDashboard() {
         }
         return 'music'
     })
-    const { song } = useSongStore()
-    const { user } = useUserStore()
-    
+    const { playingNow, setPlayingNow } = usePlaybackStore();
+    const { allSongs } = usePlaylistStore();
+    const { user } = useUserStore();
+
+    const handleNextSong = () => {
+        setPlayingNow(null);
+        setTimeout(() => {
+            setPlayingNow(allSongs[(allSongs.findIndex(song => song._id === playingNow._id) + 1) % allSongs.length]);
+        }, 1);
+    }
+
+    const handlePrevSong = () => {
+        setPlayingNow(null);
+        setTimeout(() => {
+            setPlayingNow(allSongs[(allSongs.findIndex(song => song._id === playingNow._id) - 1 + allSongs.length) % allSongs.length]);
+        }, 1);
+    }
+
     fetchUserUtil()
 
     useEffect(() => {
@@ -123,9 +138,7 @@ export default function UserDashboard() {
                 </div>
             </div>
 
-            {song && (
-                <PlayerPopup music={song} />
-            )}
+            {playingNow && ( <PlayerPopup music={playingNow} onMusicEnd={handleNextSong} handleNext={handleNextSong} handlePrev={handlePrevSong} /> )}
         </div>
     )
 }

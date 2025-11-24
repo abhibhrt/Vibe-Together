@@ -5,7 +5,7 @@ import { FaMusic } from 'react-icons/fa';
 import api from '@/utils/api';
 import DeleteMusic from './remove.music';
 import { useUserStore } from '@/store/useUserStore';
-import { useSongStore } from '@/store/useSongStore';
+import { usePlaybackStore, usePlaylistStore } from '@/store/useSongStore';
 
 export default function ListMusic({ searchQuery }) {
   const [musicList, setMusicList] = useState([]);
@@ -14,7 +14,8 @@ export default function ListMusic({ searchQuery }) {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const { user } = useUserStore();
-  const { setSong } = useSongStore();
+  const { setPlayingNow } = usePlaybackStore();
+  const { setAllSongs } = usePlaylistStore();
 
   const containerRef = useRef(null);
 
@@ -42,13 +43,15 @@ export default function ListMusic({ searchQuery }) {
     setFetchFailed(false);
 
     try {
-      const res = await api.get(`/api/music?page=${pageNum}&q=${searchQuery || ''}`);
+      const res = await api.get(`/api/musics/getall?page=${pageNum}&q=${searchQuery || ''}`);
 
       if (res?.data?.music) {
         if (pageNum === 1) {
           setMusicList(res.data.music);
+          setAllSongs(res.data.music);
         } else {
           setMusicList(prev => [...prev, ...res.data.music]);
+          setAllSongs(prev => [...prev, ...res.data.music]);
         }
 
         setHasMore(res.data.music.length === 10);
@@ -72,12 +75,12 @@ export default function ListMusic({ searchQuery }) {
   }, [searchQuery]);
 
   const handleSetMusic = (music) => {
-  setSong(null);
+    setPlayingNow(null);
 
-  setTimeout(() => {
-    setSong(music);
-  }, 100);
-};
+    setTimeout(() => {
+      setPlayingNow(music);
+    }, 1);
+  };
   // infinite scroll
   useEffect(() => {
     const container = containerRef.current;

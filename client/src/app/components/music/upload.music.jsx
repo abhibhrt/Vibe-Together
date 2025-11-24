@@ -30,7 +30,7 @@ export default function UploadMusic() {
         setLoading(true);
 
         try {
-            const res = await api.post('/api/music/create', formData);
+            const res = await api.post('/api/musics/create', formData);
             setFormData({
                 music_name: '',
                 singers: '',

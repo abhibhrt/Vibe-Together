@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const coupleValidator = z.object({
+export const requestValidator = z.object({
     receiver: z
         .string()
         .regex(/^[0-9a-fA-F]{24}$/, 'invalid receiver id'),

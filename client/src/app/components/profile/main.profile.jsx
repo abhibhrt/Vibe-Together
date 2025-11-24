@@ -54,7 +54,7 @@ export default function Profile() {
         fd.append('avatar', formData.avatar);
       }
 
-      const res = await api.put('/api/user/update', fd, {
+      const res = await api.put('/api/users/update', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 

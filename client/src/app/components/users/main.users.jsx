@@ -14,7 +14,7 @@ export default function UsersList({ currUser }) {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const res = await api.get('/api/user/users-all');
+                const res = await api.get('/api/users/getall');
                 setUsers(res.data.users || []);
             } catch (error) {
                 console.log('fetch error:', error);
@@ -30,7 +30,7 @@ export default function UsersList({ currUser }) {
         setSending(prev => ({ ...prev, [userId]: true }));
 
         try {
-            await api.post('/api/couple/create', { receiver: userId });
+            await api.post('/api/requests/create', { receiver: userId });
             setFriends(prev => [...prev, userId]);
         } catch (error) {
             console.error('Error adding friend:', error);

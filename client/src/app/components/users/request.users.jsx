@@ -16,7 +16,7 @@ export const CoupleRequest = () => {
     const fetchCoupleRequests = async () => {
         try {
             setLoading(true);
-            const res = await api.get('/api/couple/read');
+            const res = await api.get('/api/requests/read');
             setNotifications({ couple: res.data.couple || [] });
         } catch (error) {
             console.error('Error fetching couple requests:', error);
@@ -28,7 +28,7 @@ export const CoupleRequest = () => {
     const handleAcceptCouple = async (requestId) => {
         setActionLoading(prev => ({ ...prev, [requestId]: 'accept' }));
         try {
-            await api.put(`/api/couple/update/${requestId}`);
+            await api.put(`/api/requests/update/${requestId}`);
             await fetchCoupleRequests();
         } catch (error) {
             console.error('Error accepting couple request:', error);
@@ -40,7 +40,7 @@ export const CoupleRequest = () => {
     const handleRejectCouple = async (requestId) => {
         setActionLoading(prev => ({ ...prev, [requestId]: 'reject' }));
         try {
-            await api.delete(`/api/couple/remove/${requestId}`);
+            await api.delete(`/api/requests/remove/${requestId}`);
             await fetchCoupleRequests();
         } catch (error) {
             console.error('Error rejecting couple request:', error);
