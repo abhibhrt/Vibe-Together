@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { FaMusic } from 'react-icons/fa';
 import api from '@/utils/api';
 import DeleteMusic from './remove.music';
@@ -8,58 +8,40 @@ import { useUserStore } from '@/store/useUserStore';
 import { usePlaybackStore, usePlaylistStore } from '@/store/useSongStore';
 
 export default function ListMusic({ searchQuery }) {
-  const [musicList, setMusicList] = useState([]);
+  const [allMusic, setAllMusic] = useState([]);
+  const [filteredMusic, setFilteredMusic] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchFailed, setFetchFailed] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(1);
+
   const { user } = useUserStore();
   const { setPlayingNow } = usePlaybackStore();
   const { setAllSongs } = usePlaylistStore();
 
-  const containerRef = useRef(null);
-
-  // extract youtube video id
   const getYoutubeId = (url) => {
     try {
       if (!url) return null;
-
-      if (url.includes('youtu.be')) {
-        return url.split('youtu.be/')[1].split('?')[0];
-      }
-
-      const params = new URL(url).searchParams;
-      return params.get('v');
+      if (url.includes('youtu.be')) return url.split('youtu.be/')[1].split('?')[0];
+      return new URL(url).searchParams.get('v');
     } catch {
       return null;
     }
   };
 
-  // fetch music
-  const fetchMusic = async (pageNum = 1) => {
-    if (loading) return;
-
+  // fetch ALL songs once
+  const fetchMusic = async () => {
     setLoading(true);
     setFetchFailed(false);
 
     try {
-      const res = await api.get(`/api/musics/getall?page=${pageNum}&q=${searchQuery || ''}`);
+      const res = await api.get(`/api/musics/getall`);
 
       if (res?.data?.music) {
-        if (pageNum === 1) {
-          setMusicList(res.data.music);
-          setAllSongs(res.data.music);
-        } else {
-          setMusicList(prev => [...prev, ...res.data.music]);
-          setAllSongs(prev => [...prev, ...res.data.music]);
-        }
-
-        setHasMore(res.data.music.length === 10);
-        setPage(pageNum);
+        setAllMusic(res.data.music);
+        setFilteredMusic(res.data.music);
+        setAllSongs(res.data.music);
       } else {
         setFetchFailed(true);
       }
-
     } catch (err) {
       console.error('fetch error:', err);
       setFetchFailed(true);
@@ -69,37 +51,36 @@ export default function ListMusic({ searchQuery }) {
   };
 
   useEffect(() => {
-    setPage(1);
-    setMusicList([]);
-    fetchMusic(1);
-  }, [searchQuery]);
+    fetchMusic();
+  }, []);
+
+  // local filter (song name + singer name)
+  useEffect(() => {
+    if (!searchQuery) {
+      setFilteredMusic(allMusic);
+      return;
+    }
+
+    const q = searchQuery.toLowerCase();
+
+    const filtered = allMusic.filter((item) => {
+      const nameMatch = item.music_name?.toLowerCase().includes(q);
+
+      const singerMatch = Array.isArray(item.singers)
+        ? item.singers.some(s => s.toLowerCase().includes(q))
+        : item.singers?.toLowerCase().includes(q);
+
+      return nameMatch || singerMatch;
+    });
+
+    setFilteredMusic(filtered);
+  }, [searchQuery, allMusic]);
 
   const handleSetMusic = (music) => {
     setPlayingNow(null);
-
-    setTimeout(() => {
-      setPlayingNow(music);
-    }, 1);
+    setTimeout(() => setPlayingNow(music), 1);
   };
-  // infinite scroll
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
 
-    const onScroll = () => {
-      if (loading || !hasMore) return;
-
-      const nearBottom =
-        container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
-
-      if (nearBottom) fetchMusic(page + 1);
-    };
-
-    container.addEventListener('scroll', onScroll);
-    return () => container.removeEventListener('scroll', onScroll);
-  }, [loading, hasMore, page]);
-
-  // card ui
   const renderItem = (music, index) => {
     const videoId = getYoutubeId(music.url);
     const thumbnail = videoId
@@ -113,52 +94,38 @@ export default function ListMusic({ searchQuery }) {
         style={{ animationDelay: `${index * 0.06}s` }}
       >
         <div className='flex items-center space-x-4'>
-          {/* thumbnail */}
-          <div className='relative'>
-            <div
-              onClick={() => handleSetMusic(music)}
-              className='w-16 h-16 rounded-xl overflow-hidden bg-gray-700'
-            >
-              {thumbnail ? (
-                <img
-                  src={thumbnail}
-                  alt={music.music_name}
-                  className='w-full h-full object-cover'
-                />
-              ) : (
-                <div className='w-full h-full bg-gradient-to-br from-purple-600 to-red-600 flex items-center justify-center'>
-                  <FaMusic className='text-white text-xl' />
-                </div>
-              )}
-            </div>
+          <div
+            onClick={() => handleSetMusic(music)}
+            className='w-16 h-16 rounded-xl overflow-hidden bg-gray-700'
+          >
+            {thumbnail ? (
+              <img src={thumbnail} alt={music.music_name} className='w-full h-full object-cover' />
+            ) : (
+              <div className='w-full h-full bg-gradient-to-br from-purple-600 to-red-600 flex items-center justify-center'>
+                <FaMusic className='text-white text-xl' />
+              </div>
+            )}
           </div>
 
-          {/* title + singer */}
           <div className='flex-1 min-w-0'>
-            <h3
-              onClick={() => handleSetMusic(music)}
-              className='text-white font-semibold truncate'
-            >
+            <h3 onClick={() => handleSetMusic(music)} className='text-white font-semibold truncate'>
               {music.music_name}
             </h3>
-
             <p className='text-purple-300 text-sm truncate'>
-              {music.singers?.join(', ') || 'unknown'}
+              {Array.isArray(music.singers) ? music.singers.join(', ') : music.singers || 'unknown'}
             </p>
           </div>
 
-          {/* delete */}
           {user && (
             <DeleteMusic
               musicId={music._id}
               publicId={music.public_id}
               url={music.url}
-              onDeleted={() => fetchMusic(1)}
+              onDeleted={fetchMusic}
             />
           )}
         </div>
 
-        {/* youtube credit */}
         <p className='absolute bottom-2 right-4 text-[10px] text-purple-400 opacity-70'>
           source: youtube
         </p>
@@ -167,11 +134,8 @@ export default function ListMusic({ searchQuery }) {
   };
 
   return (
-    <div
-      ref={containerRef}
-      className='music-container max-h-[calc(100vh-140px)] overflow-y-auto'
-    >
-      {musicList.map((music, index) => renderItem(music, index))}
+    <div className='music-container max-h-[calc(100vh-140px)] overflow-y-auto'>
+      {filteredMusic.map((music, index) => renderItem(music, index))}
 
       {loading && (
         <div className='flex justify-center py-6'>
@@ -179,9 +143,9 @@ export default function ListMusic({ searchQuery }) {
         </div>
       )}
 
-      {!hasMore && !loading && (
+      {!loading && filteredMusic.length === 0 && (
         <div className='text-center py-6 text-purple-300'>
-          end of results
+          no results found
         </div>
       )}
 

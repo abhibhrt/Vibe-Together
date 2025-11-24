@@ -138,7 +138,11 @@ export default function UserDashboard() {
                 </div>
             </div>
 
-            {playingNow && ( <PlayerPopup music={playingNow} onMusicEnd={handleNextSong} handleNext={handleNextSong} handlePrev={handlePrevSong} /> )}
+            {playingNow && (<PlayerPopup
+                music={playingNow}
+                handleNext={handleNextSong}
+                handlePrev={handlePrevSong}
+            />)}
         </div>
     )
 }

@@ -9,7 +9,7 @@ import {
 } from 'react-icons/fa'
 import { useRef, useEffect, useState } from 'react'
 
-export default function MiniPlayer({ music, onMusicEnd, handlePrev, handleNext }) {
+export default function MiniPlayer({ music, handlePrev, handleNext }) {
   const playerRef = useRef(null)
   const containerRef = useRef(null)
   const rafRef = useRef(null)
@@ -17,8 +17,8 @@ export default function MiniPlayer({ music, onMusicEnd, handlePrev, handleNext }
   const [playing, setPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
   const [duration, setDuration] = useState(0)
-
   const [loading, setLoading] = useState(true)
+  const [thumbnailError, setThumbnailError] = useState(false);
 
   if (!music) return null
 
@@ -26,6 +26,10 @@ export default function MiniPlayer({ music, onMusicEnd, handlePrev, handleNext }
     if (!url) return null
     const idMatch = url.match(/(?:youtu\.be\/|v=)([A-Za-z0-9_-]{11})/)
     return idMatch ? idMatch[1] : null
+  }
+
+  const getThumbnailUrl = (videoId) => {
+    return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
   }
 
   const formatTime = (seconds) => {
@@ -36,6 +40,9 @@ export default function MiniPlayer({ music, onMusicEnd, handlePrev, handleNext }
 
   const videoId = getVideoId(music.url)
   if (!videoId) return null
+  useEffect(() => {
+    setThumbnailError(false)
+  }, [videoId])
 
   useEffect(() => {
     if (window.YT && window.YT.Player) return
@@ -74,17 +81,17 @@ export default function MiniPlayer({ music, onMusicEnd, handlePrev, handleNext }
         events: {
           onReady: (e) => {
             e.target.playVideo()
-
             setTimeout(() => {
               e.target.unMute()
             }, 1000)
           },
           onStateChange: (e) => {
-            setLoading(false)
+            if (e.data !== -1) setLoading(false)
+
             setPlaying(e.data === 1)
 
-            if (e.data === 0 && onMusicEnd) {
-              onMusicEnd()
+            if (e.data === 0 && handleNext) {
+              handleNext()
             }
           }
         }
@@ -108,7 +115,7 @@ export default function MiniPlayer({ music, onMusicEnd, handlePrev, handleNext }
       }
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
-  }, [videoId, onMusicEnd])
+  }, [videoId, handleNext]);
 
   useEffect(() => {
     const tick = () => {
@@ -141,17 +148,27 @@ export default function MiniPlayer({ music, onMusicEnd, handlePrev, handleNext }
     }
   }
 
+  const thumbnailUrl = getThumbnailUrl(videoId)
+
   return (
     <div className='fixed bottom-15 left-0 w-full bg-gray-900 text-white p-3 shadow-xl border-t border-purple-700/40 flex flex-col z-50'>
-
       <div className='absolute top-0 left-0 opacity-0 pointer-events-none'>
         <div ref={containerRef} className='w-0 h-0'></div>
       </div>
 
       <div className='flex items-center justify-between w-full'>
         <div className='flex items-center gap-3'>
-          <div className='w-12 h-12 rounded-md overflow-hidden bg-gradient-to-br from-purple-700 to-red-700 flex items-center justify-center shadow-md'>
-            <FaMusic className='text-white text-lg opacity-80' />
+          <div className='w-12 h-12 rounded-md overflow-hidden bg-gray-700 flex items-center justify-center shadow-md'>
+            {!thumbnailError ? (
+              <img
+                src={thumbnailUrl}
+                alt={`${music.music_name} thumbnail`}
+                className='object-cover w-full h-full'
+                onError={() => setThumbnailError(true)}
+              />
+            ) : (
+              <FaMusic className='text-white text-lg opacity-80' />
+            )}
           </div>
 
           <div className='flex flex-col'>
@@ -165,7 +182,7 @@ export default function MiniPlayer({ music, onMusicEnd, handlePrev, handleNext }
         </div>
 
         <div className='flex items-center gap-4'>
-          <button onClick={handlePrev} className='p-2 text-purple-300 hover:text-white'>
+          <button onClick={handlePrev} className='p-2 text-purple-300 hover:text-white' aria-label="Previous Song">
             <FaStepBackward />
           </button>
 
@@ -173,6 +190,7 @@ export default function MiniPlayer({ music, onMusicEnd, handlePrev, handleNext }
             onClick={togglePlay}
             disabled={loading}
             className='bg-gradient-to-r from-purple-600 to-red-600 p-3 rounded-full hover:scale-105 transition transform shadow-md disabled:opacity-50 disabled:cursor-not-allowed'
+            aria-label={playing ? "Pause" : "Play"}
           >
             {loading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -183,13 +201,11 @@ export default function MiniPlayer({ music, onMusicEnd, handlePrev, handleNext }
             )}
           </button>
 
-          <button onClick={handleNext} className='p-2 text-purple-300 hover:text-white'>
+          <button onClick={handleNext} className='p-2 text-purple-300 hover:text-white' aria-label="Next Song">
             <FaStepForward />
           </button>
         </div>
       </div>
-
-      {/* Time Display Section */}
       <div className='flex items-center justify-between w-full mt-2 text-xs text-purple-300'>
         <span className='w-10 text-left'>{formatTime(progress)}</span>
         <input
@@ -198,10 +214,12 @@ export default function MiniPlayer({ music, onMusicEnd, handlePrev, handleNext }
           max={duration || 0}
           value={progress}
           onChange={handleSeek}
-          className='flex-1 mx-2 h-1 rounded-full appearance-none bg-gray-700 [&::-webkit-slider-thumb]:bg-red-500 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full'
+          disabled={!duration || loading}
+          className='flex-1 mx-2 h-1 rounded-full appearance-none bg-gray-700 [&::-webkit-slider-thumb]:bg-red-500 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full disabled:cursor-not-allowed disabled:opacity-50'
           style={{
             background: `linear-gradient(to right, #A855F7 0%, #A855F7 ${(progress / duration) * 100}%, #4B5563 ${(progress / duration) * 100}%, #4B5563 100%)`
           }}
+          aria-label="Progress slider"
         />
         <span className='w-10 text-right'>{formatTime(duration)}</span>
       </div>
