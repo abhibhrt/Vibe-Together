@@ -179,39 +179,20 @@ export default function Profile() {
             </div>
           )}
         </div>
-        <div className='grid grid-cols-3 gap-4 px-2'>
-          {[
-            { icon: FaMusic, label: 'Songs', value: '128', color: 'from-purple-500 to-pink-500' },
-            { icon: FaHeart, label: 'Loved', value: '64', color: 'from-red-500 to-pink-500' },
-            { icon: FaHistory, label: 'Hours', value: '89', color: 'from-purple-500 to-red-500' }
-          ].map((stat, index) => (
-            <div
-              key={stat.label}
-              className='bg-gray-800/70 backdrop-blur-lg rounded-xl p-4 text-center border border-purple-500/20 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20 animate-slide-up'
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <div className={`w-12 h-12 bg-gradient-to-r ${stat.color} rounded-full flex items-center justify-center mx-auto mb-2 transition-transform duration-300 hover:rotate-12`}>
-                <stat.icon className='text-white text-lg' />
-              </div>
-              <div className='text-white font-bold text-xl'>{stat.value}</div>
-              <div className='text-purple-300 text-sm'>{stat.label}</div>
-            </div>
-          ))}
-        </div>
-        <div className='bg-gray-800/70 backdrop-blur-lg p-6 animate-slide-up'>
+        <div className='p-2 animate-slide-up'>
           <h3 className='text-white font-semibold mb-4 text-lg flex items-center space-x-2'>
             <FaCog className='text-purple-400' />
             <span>Account Settings</span>
           </h3>
-          <div className='space-y-3'>
+          <div className='space-y-2'>
             {[
-              { icon: FaMusic, label: 'Subscription', desc: 'Premium Romance' },
-              { icon: FaHeart, label: 'Privacy', desc: 'Your secret garden' },
-              { icon: FaCog, label: 'Language', desc: 'Language of love' },
+              { icon: FaMusic, label: 'Subscription'},
+              { icon: FaHeart, label: 'Privacy'},
+              { icon: FaCog, label: 'Language'},
             ].map((item, index) => (
               <button
                 key={item.label}
-                className='w-full text-left p-4 bg-gray-700/50 rounded-xl hover:bg-gray-600/70 transition-all duration-300 transform hover:scale-105 border border-transparent hover:border-purple-500/30 group'
+                className='w-full text-left group'
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className='flex items-center space-x-3'>
@@ -220,7 +201,6 @@ export default function Profile() {
                   </div>
                   <div>
                     <div className='text-white font-medium'>{item.label}</div>
-                    <div className='text-purple-300 text-sm'>{item.desc}</div>
                   </div>
                 </div>
               </button>

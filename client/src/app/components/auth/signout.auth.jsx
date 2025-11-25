@@ -31,12 +31,7 @@ export default function SignOutPage() {
         <button
             disabled={isLoading}
             onClick={handleLogout}
-            className={`w-full text-left p-4 rounded-xl transition-all duration-300 transform border border-transparent group
-        ${isLoading
-                    ? 'bg-gray-700/30 cursor-not-allowed'
-                    : 'bg-gray-700/50 hover:bg-gray-600/70 hover:scale-105 hover:border-purple-500/30'
-                }`}
-        >
+            className={`w-full text-left ${isLoading ? 'bg-gray-700/30 cursor-not-allowed' : ''}`}>
             <div className='flex items-center space-x-3'>
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-transform duration-300
           bg-gradient-to-r from-purple-600 to-red-600
@@ -47,10 +42,7 @@ export default function SignOutPage() {
 
                 <div>
                     <div className='text-white font-medium'>
-                        {isLoading ? 'logging out...' : 'logout'}
-                    </div>
-                    <div className='text-purple-300 text-sm'>
-                        {isLoading ? '' : 'see you soon'}
+                        {isLoading ? 'Logging out...' : 'Logout'}
                     </div>
                 </div>
             </div>

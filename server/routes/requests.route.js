@@ -4,9 +4,8 @@ import express from 'express';
 // Controllers Imported
 import { createRequestsController } from '../controllers/request.controller/create.request.js';
 import { removeRequestsController } from '../controllers/request.controller/remove.request.js';
-import { updateRequestsController } from '../controllers/request.controller/update.request.js';
+import { addFriendsController } from '../controllers/friends.controller/add.friends.js';
 import { getRequestsController } from '../controllers/request.controller/read.request.js';
-import { getFriendsController } from '../controllers/request.controller/read.request.js';
 
 // Middlewares Imported
 import { validateRequest } from '../middlewares/validator.middleware.js';
@@ -31,16 +30,10 @@ router.post('/create', protect, validateRequest(requestValidator), createRequest
 router.get('/read', protect, getRequestsController);
 
 /*
-    @route: /api/requests/friends
-    @desc: get all friends
-*/
-router.get('/friends', protect, getFriendsController);
-
-/*
     @route: /api/requests/update/:id
     @desc: update request
 */
-router.put('/update/:id', protect, updateRequestsController);
+router.put('/update/:id', protect, addFriendsController);
 
 /*
     @route: /api/requests/remove/:id

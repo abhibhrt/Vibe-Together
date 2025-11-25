@@ -17,7 +17,7 @@ export const CoupleRequest = () => {
         try {
             setLoading(true);
             const res = await api.get('/api/requests/read');
-            setNotifications({ couple: res.data.couple || [] });
+            setNotifications({ couple: res.data.requests || [] });
         } catch (error) {
             console.error('Error fetching couple requests:', error);
         } finally {
