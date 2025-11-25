@@ -10,7 +10,6 @@ import { useUserStore } from '@/store/useUserStore';
 let socket = null;
 
 export default function SelectedChats({ friend }) {
-
     const { user } = useUserStore();
 
     if (!friend) {
@@ -21,14 +20,13 @@ export default function SelectedChats({ friend }) {
         );
     }
 
-    const chatId = friend.id; // friend _id from chat list
-
+    const chatId = friend.id;
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([]);
     const [roomId, setRoomId] = useState(null);
     const messagesEndRef = useRef(null);
 
-    // Auto scroll bottom
+    // Auto scroll
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
@@ -37,13 +35,12 @@ export default function SelectedChats({ friend }) {
         if (!chatId) return;
 
         const initChat = async () => {
-
-            // 1) Create/get room
+            // Get or create room
             const roomRes = await api.post(`/api/friends/chat/${chatId}`);
             const roomData = roomRes.data;
             setRoomId(roomData.roomId);
 
-            // 2) Load old messages
+            // Load old messages
             const msgRes = await api.get(`/api/friends/chat/${chatId}`);
             const oldMsgs = msgRes.data || [];
 
@@ -54,17 +51,18 @@ export default function SelectedChats({ friend }) {
 
             setMessages(normalized);
 
-            // 3) Connect socket
+            // Connect socket
             socket = io(process.env.NEXT_PUBLIC_API_URL, {
                 withCredentials: true,
             });
 
-            // 4) Join the chat room
+            // Join room
             socket.emit('joinRoom', roomData.roomId);
 
-            // 5) Real-time message receive (NO duplicate listeners)
+            // LISTENER REMOVE TO AVOID DUPLICATES
             socket.off("serverMessage");
 
+            // Realtime message receive
             socket.on("serverMessage", (msg) => {
                 const fixed = {
                     ...msg,
@@ -75,21 +73,29 @@ export default function SelectedChats({ friend }) {
         };
 
         initChat();
+
         return () => socket?.disconnect();
     }, [chatId]);
 
-    // Determine if logged user is sender
     const isMe = (msg) => msg.senderId === String(user?.id);
 
-    // Send message
+    // SEND MESSAGE (NEW WORKING FLOW)
     const sendMessage = async () => {
         if (!message.trim() || !roomId) return;
 
-        // No local push; socket will deliver clean message
-        await api.post(`/api/friends/message/${roomId}`, {
+        // Step 1: save to DB
+        const res = await api.post(`/api/friends/message/${roomId}`, {
             content: message
         });
+        const saved = res.data;
 
+        // Step 2: tell server to broadcast to room
+        socket.emit("sendMessageServer", {
+            roomId,
+            message: saved
+        });
+
+        // DO NOT PUSH IN UI LOCALLY → socket will handle it
         setMessage('');
     };
 
@@ -105,7 +111,6 @@ export default function SelectedChats({ friend }) {
 
                     <div className='flex items-center space-x-3'>
                         <img src={friend.avatar} className='w-10 h-10 rounded-full' />
-
                         <div>
                             <h2 className='text-white font-semibold'>{friend.name}</h2>
                             <p className='text-purple-300 text-sm'>online</p>
@@ -152,7 +157,7 @@ export default function SelectedChats({ friend }) {
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* MESSAGE INPUT */}
+            {/* INPUT */}
             <div className='bg-gray-800/70 border-t border-purple-500/30 p-4'>
                 <div className='flex items-center space-x-3'>
                     <button className='text-purple-300 hover:text-white p-2'>

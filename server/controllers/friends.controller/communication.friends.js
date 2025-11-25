@@ -69,9 +69,6 @@ export const sendMessage = async (req, res) => {
             $push: { messages: newMessage }
         });
 
-        // ⭐ EMIT REALTIME FROM CONTROLLER
-        req.io.to(roomId).emit("serverMessage", newMessage);
-
         return res.status(200).json(newMessage);
 
     } catch (err) {

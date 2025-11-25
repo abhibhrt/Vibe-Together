@@ -20,7 +20,7 @@ dotenv.config();
 const app = express();
 connectDb();
 
-// middlewares
+// middleware
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json({ limit: '1mb' }));
@@ -65,11 +65,7 @@ const io = new Server(server, {
   }
 });
 
-// ⭐ IMPORTANT: allow controller to emit socket events
-app.use((req, res, next) => {
-  req.io = io;
-  next();
-});
+// ❌ removed req.io injection
 
 // routes
 app.use('/api/users', AuthRoutes);
@@ -77,6 +73,7 @@ app.use('/api/requests', RequestRoute);
 app.use('/api/musics', MusicRoute);
 app.use('/api/friends', FriendsRoute);
 
+// base
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'api running..' });
 });
@@ -86,6 +83,6 @@ io.on('connection', (socket) => {
   chatHandler(io, socket);
 });
 
-// start server
+// start
 const port = process.env.PORT || 5000;
 server.listen(port, () => console.log(`api running port: ${port}`));
