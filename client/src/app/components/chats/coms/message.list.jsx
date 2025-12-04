@@ -14,10 +14,10 @@ export default function MessageList({ messages, user }) {
     const isMe = (msg) => msg.senderId === String(user?.id);
 
     return (
-        <div className='flex-1 overflow-y-auto p-4 space-y-3 bg-gray-900/50'>
+        <div className='flex-1 overflow-y-auto p-4 space-y-3 fixed top-18 bottom-17 left-0 right-0 '>
             {messages.length === 0 ? (
                 <div className="text-center text-gray-400 py-8">
-                    <p>No messages yet. Start the conversation!</p>
+                    <p>no messages yet. start the conversation!</p>
                 </div>
             ) : (
                 messages.map((msg, index) => {

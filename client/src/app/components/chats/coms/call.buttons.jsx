@@ -15,14 +15,14 @@ export default function CallButtons({
                     <button
                         onClick={() => startCall('voice')}
                         className="bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-green-500/30"
-                        title="Voice Call"
+                        title="voice call"
                     >
                         <FaPhone size={18} />
                     </button>
                     <button
                         onClick={() => startCall('video')}
                         className="bg-gradient-to-r from-blue-600 to-purple-800 hover:from-blue-700 hover:to-purple-900 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-purple-500/30"
-                        title="Video Call"
+                        title="video call"
                     >
                         <FaVideo size={18} />
                     </button>
@@ -32,7 +32,7 @@ export default function CallButtons({
             {isCalling && (
                 <div className="flex items-center space-x-4">
                     <span className="text-yellow-400 text-sm font-semibold animate-pulse">
-                        Calling...
+                        calling...
                     </span>
                     <button
                         onClick={endCall}

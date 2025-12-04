@@ -64,7 +64,7 @@ export default function CallInterface({
                     <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-10">
                         <div className="bg-black/60 backdrop-blur-md p-4 rounded-2xl border border-purple-500/30">
                             <p className="text-white font-bold text-lg">
-                                {callType === 'video' ? '📹 Video' : '📞 Voice'} Call with {friend.name}
+                                {callType === 'video' ? 'video' : 'voice'} call with {friend.name}
                             </p>
                         </div>
                         <button
@@ -89,7 +89,7 @@ export default function CallInterface({
                                     <div className="w-32 h-32 mx-auto mb-6 rounded-full bg-gray-800/80 flex items-center justify-center">
                                         <FaVideo className="text-white text-5xl" />
                                     </div>
-                                    <p className="text-white text-xl">Waiting for {friend.name}'s video...</p>
+                                    <p className="text-white text-xl">waiting for {friend.name}'s video...</p>
                                 </div>
                             </div>
                         )}

@@ -168,8 +168,8 @@ export default function SelectedChats({ friend }) {
                         <div>
                             <h2 className='text-white font-bold text-lg'>{friend.name}</h2>
                             <p className='text-purple-300 text-sm'>
-                                {webrtc.isInCall ? '📞 In a call' :
-                                    webrtc.isCalling ? '📞 Calling...' : '🟢 Online'}
+                                {webrtc.isInCall ? '📞 in a call' :
+                                    webrtc.isCalling ? '📞 calling...' : 'online'}
                             </p>
                         </div>
                     </div>

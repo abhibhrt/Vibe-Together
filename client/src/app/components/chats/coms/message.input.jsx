@@ -10,7 +10,7 @@ export default function MessageInput({
     isInCall = false
 }) {
     return (
-        <div className={`bg-gray-800/70 border-t border-purple-500/30 p-4 transition-all ${isInCall ? 'opacity-50' : ''}`}>
+        <div className={`bg-gray-800/70 fixed bottom-0 left-0 right-0 border-t border-purple-500/30 p-3 transition-all ${isInCall ? 'opacity-50' : ''}`}>
             <div className='flex items-center space-x-3'>
                 <button
                     className='text-purple-300 hover:text-white p-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
@@ -18,13 +18,6 @@ export default function MessageInput({
                     disabled={isInCall}
                 >
                     <FaPaperclip />
-                </button>
-                <button
-                    className='text-purple-300 hover:text-white p-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
-                    title="Emoji"
-                    disabled={isInCall}
-                >
-                    <FaSmile />
                 </button>
                 <div className='flex-1'>
                     <textarea
