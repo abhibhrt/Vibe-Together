@@ -58,12 +58,20 @@ app.use(
 const server = http.createServer(app);
 
 // socket.io
+
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true
   }
 });
+
 
 // ❌ removed req.io injection
 
