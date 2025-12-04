@@ -1,4 +1,5 @@
 export const chatHandler = (io, socket) => {
+
     socket.on('joinRoom', (roomId) => {
         socket.join(roomId);
     });
@@ -14,30 +15,36 @@ export const chatHandler = (io, socket) => {
             signal: signalData, 
             from, 
             name,
-            type, // 'video' or 'voice'
+            type,
             roomId 
         });
     });
 
     socket.on('acceptCall', ({ signal, to, roomId }) => {
-        socket.to(roomId).emit('callAccepted', signal);
+        socket.to(roomId).emit('callAccepted', { 
+            signal, 
+            from: to, 
+            roomId 
+        });
     });
 
     socket.on('endCall', ({ roomId, userId }) => {
-        socket.to(roomId).emit('callEnded', { userId });
+        io.to(roomId).emit('callEnded', { userId });
     });
 
-    socket.on('rejectCall', ({ roomId }) => {
-        socket.to(roomId).emit('callRejected');
+    socket.on('rejectCall', ({ roomId, from }) => {
+        socket.to(roomId).emit('callRejected', { from });
     });
 
-    socket.on('callerICE', ({ roomId, candidate }) => {
-        socket.to(roomId).emit('callerICE', candidate);
+    socket.on('callerICE', ({ roomId, candidate, to }) => {
+        socket.to(roomId).emit('callerICE', { candidate, from: to });
     });
 
-    socket.on('calleeICE', ({ roomId, candidate }) => {
-        socket.to(roomId).emit('calleeICE', candidate);
+    socket.on('calleeICE', ({ roomId, candidate, to }) => {
+        socket.to(roomId).emit('calleeICE', { candidate, from: to });
     });
 
-    socket.on('disconnect', () => {});
+    socket.on('disconnect', () => {
+        console.log(`Socket disconnected`);
+    });
 };
