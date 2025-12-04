@@ -1,16 +1,19 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { FaPaperclip, FaMicrophone, FaSmile, FaPaperPlane, FaArrowLeft, FaEllipsisV, FaCheck, FaVideo, FaPhone, FaVideoSlash, FaPhoneSlash } from 'react-icons/fa';
 import Link from 'next/link';
-import { FaArrowLeft, FaPaperPlane, FaPaperclip, FaSmile, FaMicrophone } from 'react-icons/fa';
 import io from 'socket.io-client';
 import api from '@/utils/api';
 import { useUserStore } from '@/store/useUserStore';
 
+// Initialize the socket variable globally or outside the component for persistence
 let socket = null;
-
-// STUN server configuration for NAT traversal
-const iceServers = [{ urls: "stun:stun.l.google.com:19302" }];
+const peerConnectionConfig = {
+    'iceServers': [
+        {'urls': 'stun:stun.l.google.com:19302'}, // Google's public STUN server
+    ]
+};
 
 export default function SelectedChats({ friend }) {
     const { user } = useUserStore();
@@ -23,365 +26,363 @@ export default function SelectedChats({ friend }) {
         );
     }
 
-    const chatUserId = friend.id;
-
+    const chatId = friend.id;
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([]);
     const [roomId, setRoomId] = useState(null);
-
     const messagesEndRef = useRef(null);
 
-    // VIDEO CALL STATES
-    const [incomingCall, setIncomingCall] = useState(false);
-    const [inCall, setInCall] = useState(false);
-    const [isCallInitiator, setIsCallInitiator] = useState(false); // New state to track if current user started the call
+    // --- WebRTC State & Refs ---
+    const [isCalling, setIsCalling] = useState(false);
+    const [isCallActive, setIsCallActive] = useState(false);
+    const [callType, setCallType] = useState(null); // 'video' or 'audio'
+    const localVideoRef = useRef(null);
+    const remoteVideoRef = useRef(null);
+    const peerConnectionRef = useRef(null);
+    const localStreamRef = useRef(null);
 
-    const localVideo = useRef(null);
-    const remoteVideo = useRef(null);
 
-    const peerConnection = useRef(null);
-    const localStream = useRef(null);
-
-    // Auto scroll
+    // Auto scroll for messages
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    // ---------------------------------------------------------
-    // RESET CALL
-    // ---------------------------------------------------------
-    const resetCall = () => {
-        setInCall(false);
-        setIncomingCall(false);
-        setIsCallInitiator(false); // Reset initiator state
-
-        if (localVideo.current) localVideo.current.srcObject = null;
-        if (remoteVideo.current) remoteVideo.current.srcObject = null;
-
-        if (peerConnection.current) {
-            peerConnection.current.ontrack = null;
-            peerConnection.current.onicecandidate = null;
-            peerConnection.current.close();
+    // Cleanup function for disconnecting WebRTC and Socket
+    const cleanup = useCallback(() => {
+        if (localStreamRef.current) {
+            localStreamRef.current.getTracks().forEach(track => track.stop());
+            localStreamRef.current = null;
         }
-        peerConnection.current = null;
-
-        if (localStream.current) {
-            localStream.current.getTracks().forEach(t => t.stop());
-            localStream.current = null;
+        if (peerConnectionRef.current) {
+            peerConnectionRef.current.close();
+            peerConnectionRef.current = null;
         }
-    };
+        socket?.off("webrtc-offer");
+        socket?.off("webrtc-answer");
+        socket?.off("webrtc-ice-candidate");
+        socket?.off("webrtc-call-end");
+        setIsCalling(false);
+        setIsCallActive(false);
+        setCallType(null);
+    }, []);
 
+    // --- WebRTC Core Functions ---
 
-    // ---------------------------------------------------------
-    // WEBRTC INITIALIZATION AND OFFER/ANSWER EXCHANGE
-    // ---------------------------------------------------------
-    const startWebRTC = async (isCaller) => {
-        setInCall(true);
-        setIsCallInitiator(isCaller); // Set initiator state
-
+    // 1. Get Local Media Stream
+    const getLocalStream = useCallback(async (type) => {
         try {
-            // 1. Get Local Media Stream
-            localStream.current = await navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: true
-            });
-
-            if (localVideo.current) {
-                localVideo.current.srcObject = localStream.current;
-            }
-
-            // 2. Create RTCPeerConnection
-            peerConnection.current = new RTCPeerConnection({ iceServers });
-
-            // 3. Handle Local ICE Candidates
-            peerConnection.current.onicecandidate = (event) => {
-                if (event.candidate) {
-                    socket.emit("iceCandidate", {
-                        roomId,
-                        candidate: event.candidate
-                    });
-                }
+            const constraints = {
+                video: type === 'video',
+                audio: true,
             };
-
-            // 4. Handle Remote Track (Receiving Stream)
-            peerConnection.current.ontrack = (e) => {
-                if (remoteVideo.current && e.streams && e.streams[0]) {
-                    remoteVideo.current.srcObject = e.streams[0];
-                }
-            };
-            
-            // 5. Add Local Tracks to PeerConnection
-            localStream.current.getTracks().forEach(track => {
-                peerConnection.current.addTrack(track, localStream.current);
-            });
-
-            // 6. Caller sends OFFER
-            if (isCaller) {
-                const offer = await peerConnection.current.createOffer();
-                await peerConnection.current.setLocalDescription(offer);
-                socket.emit("webrtcOffer", { roomId, offer });
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            localStreamRef.current = stream;
+            if (localVideoRef.current) {
+                localVideoRef.current.srcObject = stream;
             }
+            return stream;
         } catch (error) {
-            console.error("Error setting up WebRTC:", error);
-            alert("Could not start video call. Check your camera/mic permissions.");
-            resetCall();
+            console.error('Error getting user media:', error);
+            alert(`Could not access your ${type === 'video' ? 'camera and microphone' : 'microphone'}. Please check permissions.`);
+            return null;
         }
-    };
+    }, []);
 
+    // 2. Set up RTCPeerConnection and Event Listeners
+    const setupPeerConnection = useCallback((stream) => {
+        cleanup(); // Ensure any previous connection is closed
+        
+        const pc = new RTCPeerConnection(peerConnectionConfig);
 
-    // MAIN EFFECT – LOAD CHAT + CONNECT SOCKET
-    useEffect(() => {
-        if (!chatUserId || !user) return; // Ensure user is available
+        // Add local tracks to the connection
+        stream.getTracks().forEach(track => pc.addTrack(track, stream));
 
-        const init = async () => {
-            // 1️⃣ Get or create room
-            const resRoom = await api.post(`/api/friends/chat/${chatUserId}`);
-            setRoomId(resRoom.data.roomId);
-
-            // 2️⃣ Load old messages
-            const resMsgs = await api.get(`/api/friends/chat/${chatUserId}`);
-            const old = resMsgs.data || [];
-            const fixed = old.map(m => ({
-                ...m,
-                // Ensure senderId is a string for comparison
-                senderId: String(m.sender?._id || m.sender) 
-            }));
-            setMessages(fixed);
-
-            // 3️⃣ Connect socket
-            if (socket && socket.connected) {
-                socket.disconnect(); // Clean up existing connection if component re-renders
+        // Event for when the remote user's media stream arrives
+        pc.ontrack = (event) => {
+            if (remoteVideoRef.current && event.streams[0]) {
+                remoteVideoRef.current.srcObject = event.streams[0];
             }
+            setIsCallActive(true);
+            setIsCalling(false); // Call is active, so not just 'calling' anymore
+        };
+
+        // Event for collecting ICE candidates (network information)
+        pc.onicecandidate = (event) => {
+            if (event.candidate) {
+                socket.emit("webrtc-ice-candidate", {
+                    roomId,
+                    candidate: event.candidate,
+                });
+            }
+        };
+
+        // Event for connection state changes (useful for debugging)
+        pc.oniceconnectionstatechange = (event) => {
+            console.log('ICE connection state:', pc.iceConnectionState);
+            if (pc.iceConnectionState === 'disconnected' || pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'closed') {
+                console.log('Call ended or failed.');
+                cleanup();
+            }
+        };
+
+        peerConnectionRef.current = pc;
+        return pc;
+    }, [roomId, cleanup]);
+
+    // 3. Initiate a Call (Caller)
+    const initiateCall = useCallback(async (type) => {
+        if (!roomId) return;
+        setCallType(type);
+        setIsCalling(true);
+
+        const stream = await getLocalStream(type);
+        if (!stream) return setIsCalling(false);
+
+        const pc = setupPeerConnection(stream);
+        
+        // Create Offer
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+
+        // Send Offer via Socket.IO Signaling
+        socket.emit("webrtc-offer", {
+            roomId,
+            offer: pc.localDescription,
+        });
+        
+    }, [roomId, getLocalStream, setupPeerConnection]);
+    
+    // 4. Handle Received Offer (Callee)
+    const handleOffer = useCallback(async (offer) => {
+        // Determine call type from the offer (if video track exists)
+        const type = offer.sdp.includes('m=video') ? 'video' : 'audio';
+        setCallType(type);
+        
+        const stream = await getLocalStream(type);
+        if (!stream) return; // Cannot proceed without stream
+
+        const pc = setupPeerConnection(stream);
+        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+
+        // Create Answer
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+
+        // Send Answer via Socket.IO Signaling
+        socket.emit("webrtc-answer", {
+            roomId,
+            answer: pc.localDescription,
+        });
+
+    }, [roomId, getLocalStream, setupPeerConnection]);
+
+    // 5. Handle Received Answer (Caller)
+    const handleAnswer = useCallback(async (answer) => {
+        if (peerConnectionRef.current) {
+            await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
+            setIsCallActive(true);
+            setIsCalling(false);
+        }
+    }, []);
+
+    // 6. Handle Received ICE Candidate
+    const handleIceCandidate = useCallback(async (candidate) => {
+        if (peerConnectionRef.current) {
+            try {
+                await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+            } catch (e) {
+                console.error('Error adding received ICE candidate', e);
+            }
+        }
+    }, []);
+    
+    // 7. End Call
+    const endCall = useCallback(() => {
+        if (socket && roomId) {
+            socket.emit("webrtc-call-end", { roomId });
+        }
+        cleanup();
+    }, [roomId, cleanup]);
+    
+    // 8. Handle Remote Call End
+    const handleRemoteCallEnd = useCallback(() => {
+        console.log("Remote user ended the call.");
+        cleanup();
+        alert('Call ended by the other user.');
+    }, [cleanup]);
+
+    // --- Main Initialisation Effect (Chat & Socket) ---
+    useEffect(() => {
+        if (!chatId) return;
+
+        const initChat = async () => {
+            // Get or create room (chatId is used as friendId)
+            const roomRes = await api.post(`/api/friends/chat/${chatId}`);
+            const roomData = roomRes.data;
+            setRoomId(roomData.roomId);
+
+            // Load old messages
+            const msgRes = await api.get(`/api/friends/chat/${chatId}`);
+            const oldMsgs = msgRes.data || [];
+
+            const normalized = oldMsgs.map(msg => ({
+                ...msg,
+                senderId: String(msg.sender?._id || msg.sender)
+            }));
+            setMessages(normalized);
+
+            // Connect socket
             socket = io(process.env.NEXT_PUBLIC_API_URL, {
                 withCredentials: true,
             });
 
-            // 4️⃣ Join room
-            socket.emit("joinRoom", resRoom.data.roomId);
+            // Join room
+            socket.emit('joinRoom', roomData.roomId);
 
-            // --------------------------
-            // MESSAGE LISTENER
-            // --------------------------
+            // --- Set up message listeners ---
             socket.off("serverMessage");
-            socket.on("serverMessage", msg => {
-                const fixedMsg = { ...msg, senderId: String(msg.sender?._id || msg.sender) };
-                setMessages(prev => [...prev, fixedMsg]);
+            socket.on("serverMessage", (msg) => {
+                const fixed = {
+                    ...msg,
+                    senderId: String(msg.sender?._id || msg.sender)
+                };
+                setMessages(prev => [...prev, fixed]);
             });
 
-            // --------------------------
-            // VIDEO CALL SIGNALING LISTENERS
-            // --------------------------
+            // --- Set up WebRTC signaling listeners (NEW) ---
+            socket.off("webrtc-offer");
+            socket.on("webrtc-offer", handleOffer);
 
-            // Incoming call
-            socket.off("incomingCall");
-            socket.on("incomingCall", ({ callerId }) => {
-                // FIXED: Check if the current user is the caller. If so, ignore the 'incomingCall' notification.
-                if (String(callerId) === String(user.id)) return; 
-                setIncomingCall(true);
-            });
+            socket.off("webrtc-answer");
+            socket.on("webrtc-answer", handleAnswer);
 
-            // Call Accepted
-            socket.off("callAccepted");
-            socket.on("callAccepted", async () => {
-                // The Caller starts WebRTC with isCaller=true
-                await startWebRTC(true); 
-            });
-
-            // Call Rejected
-            socket.off("callRejected");
-            socket.on("callRejected", () => {
-                alert(`${friend.name} rejected the call.`);
-                resetCall();
-            });
-
-            // WebRTC Offer received (from Caller)
-            socket.off("webrtcOffer");
-            socket.on("webrtcOffer", async (offer) => {
-                // The Receiver starts WebRTC with isCaller=false and processes the Offer
-                await startWebRTC(false);
-                await peerConnection.current.setRemoteDescription(offer);
-
-                const answer = await peerConnection.current.createAnswer();
-                await peerConnection.current.setLocalDescription(answer);
-
-                socket.emit("webrtcAnswer", { roomId: resRoom.data.roomId, answer });
-            });
-
-            // WebRTC Answer received (from Receiver)
-            socket.off("webrtcAnswer");
-            socket.on("webrtcAnswer", async (answer) => {
-                if (peerConnection.current && peerConnection.current.remoteDescription.type !== 'answer') {
-                     await peerConnection.current.setRemoteDescription(answer);
-                }
-            });
-
-            // ICE Candidate received
-            socket.off("iceCandidate");
-            socket.on("iceCandidate", async (candidate) => {
-                if (peerConnection.current && candidate) {
-                    try {
-                        await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
-                    } catch (e) {
-                        console.error('Error adding received ice candidate:', e);
-                    }
-                }
-            });
-
-            // Call Ended
-            socket.off("callEnded");
-            socket.on("callEnded", resetCall);
+            socket.off("webrtc-ice-candidate");
+            socket.on("webrtc-ice-candidate", handleIceCandidate);
+            
+            socket.off("webrtc-call-end");
+            socket.on("webrtc-call-end", handleRemoteCallEnd);
         };
 
-        init();
+        initChat();
 
+        // Cleanup on unmount/chatId change
         return () => {
-            // Clean up socket connection on unmount/re-render
-            if (socket) {
-                socket.off("serverMessage");
-                socket.off("incomingCall");
-                socket.off("callAccepted");
-                socket.off("callRejected");
-                socket.off("webrtcOffer");
-                socket.off("webrtcAnswer");
-                socket.off("iceCandidate");
-                socket.off("callEnded");
-                socket.disconnect();
-                socket = null;
-            }
-            resetCall(); // Also ensure local call state is cleaned up
+            endCall(); // Clean up WebRTC connection
+            socket?.disconnect();
         };
-    }, [chatUserId, user.id]); // Added user.id to dependencies
+    }, [chatId, handleOffer, handleAnswer, handleIceCandidate, handleRemoteCallEnd, endCall]);
 
-    // ---------------------------------------------------------
-    // SEND MESSAGE
-    // ---------------------------------------------------------
-    const sendMessage = async () => {
+    const isMe = (msg) => msg.senderId === String(user?.id);
+
+    // SEND MESSAGE (NEW WORKING FLOW)
+    const sendChatMessage = async () => {
         if (!message.trim() || !roomId) return;
 
-        try {
-            const res = await api.post(`/api/friends/message/${roomId}`, { content: message });
-            const saved = res.data;
-
-            socket.emit("sendMessageServer", { roomId, message: saved });
-
-            setMessage('');
-        } catch (error) {
-            console.error("Failed to send message:", error);
-        }
-    };
-
-    const isMe = (msg) => String(msg.senderId) === String(user.id);
-
-    // ---------------------------------------------------------
-    // CALL CONTROLS
-    // ---------------------------------------------------------
-
-    const startCall = () => {
-        if (!roomId || inCall) return;
-        
-        // Notify the friend of the call request
-        socket.emit("callRequest", {
-            roomId,
-            callerId: user.id
+        // Step 1: save to DB
+        const res = await api.post(`/api/friends/message/${roomId}`, {
+            content: message
         });
-        
-        // Set state for the calling user (caller) while waiting for acceptance
-        setInCall(true); 
-        setIsCallInitiator(true);
-        alert(`Calling ${friend.name}... Waiting for acceptance.`);
+        const saved = res.data;
+
+        // Step 2: tell server to broadcast to room
+        socket.emit("sendMessageServer", {
+            roomId,
+            message: saved
+        });
+
+        // DO NOT PUSH IN UI LOCALLY → socket will handle it
+        setMessage('');
     };
 
-    const acceptCall = async () => {
-        setIncomingCall(false);
-        
-        // The Receiver sends acceptance, then waits for the Offer from the Caller
-        socket.emit("callAccepted", { roomId }); 
-        
-        // The receiver will set up WebRTC and process the offer in the 'webrtcOffer' listener.
-    };
-
-    const rejectCall = () => {
-        socket.emit("callRejected", { roomId });
-        setIncomingCall(false);
-        resetCall();
-    };
-
-    const endCall = () => {
-        socket.emit("endCall", { roomId });
-        resetCall();
-    };
-
-
-    // ---------------------------------------------------------
-    // UI STARTS
-    // ---------------------------------------------------------
     return (
         <div className='min-h-screen bg-gradient-to-br from-purple-900 via-gray-900 to-red-900 flex flex-col'>
 
-            {/* HEADER */}
-            <div className='bg-gray-800/70 border-b border-purple-500/30 p-4 flex items-center justify-between sticky top-0 z-50'>
+            {/* FIXED HEADER */}
+            <div className='bg-gray-800/70 border-b border-purple-500/30 p-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-xl'>
                 <div className='flex items-center space-x-4'>
-                    <Link href="/" className='md:hidden text-purple-300'>
+                    <Link href='/' className='text-purple-300 hover:text-white md:hidden p-2'>
                         <FaArrowLeft />
                     </Link>
 
                     <div className='flex items-center space-x-3'>
-                        {/* FALLBACK: friend.avatar is assumed to be an image source */}
-                        <img src={friend.avatar || '/default-avatar.png'} alt={friend.name} className='w-10 h-10 rounded-full' />
+                        <img src={friend.avatar} className='w-10 h-10 rounded-full' alt={`${friend.name}'s avatar`} />
                         <div>
                             <h2 className='text-white font-semibold'>{friend.name}</h2>
-                            {/* Assuming 'online' status for simplicity */}
-                            <p className='text-purple-300 text-sm'>online</p>
+                            <p className='text-purple-300 text-sm'>{isCallActive ? 'In Call' : 'online'}</p>
                         </div>
                     </div>
                 </div>
-
-                {/* CALL BUTTON */}
-                <button onClick={startCall} className={`text-2xl px-3 transition-colors ${inCall ? 'text-gray-500 cursor-not-allowed' : 'text-green-400 hover:text-white'}`} disabled={inCall}>
-                    📞
-                </button>
+                
+                {/* CALL BUTTONS (NEW) */}
+                <div className='flex items-center space-x-2'>
+                    {isCallActive ? (
+                        <button
+                            onClick={endCall}
+                            className='bg-red-600 text-white p-3 rounded-full hover:scale-105 transition-transform'
+                            title='End Call'
+                        >
+                            <FaPhoneSlash />
+                        </button>
+                    ) : (
+                        <>
+                            <button
+                                onClick={() => initiateCall('video')}
+                                disabled={isCalling}
+                                className='text-purple-300 hover:text-white p-2 disabled:opacity-50'
+                                title='Start Video Call'
+                            >
+                                <FaVideo />
+                            </button>
+                            <button
+                                onClick={() => initiateCall('audio')}
+                                disabled={isCalling}
+                                className='text-purple-300 hover:text-white p-2 disabled:opacity-50'
+                                title='Start Voice Call'
+                            >
+                                <FaPhone />
+                            </button>
+                        </>
+                    )}
+                    <button className='text-purple-300 hover:text-white p-2'>
+                        <FaEllipsisV />
+                    </button>
+                </div>
             </div>
 
-            {/* INCOMING CALL POPUP */}
-            {incomingCall && (
-                <div className="absolute top-10 left-1/2 -translate-x-1/2 bg-gray-800 px-6 py-4 rounded-xl text-white flex items-center space-x-4 z-50 shadow-xl">
-                    <span>**{friend.name}** is calling…</span>
-
-                    <button onClick={acceptCall} className="bg-green-500 px-4 py-1 rounded-lg hover:bg-green-600 transition-colors">
-                        Accept
-                    </button>
-
-                    <button onClick={rejectCall} className="bg-red-500 px-4 py-1 rounded-lg hover:bg-red-600 transition-colors">
-                        Reject
-                    </button>
+            {/* CALL STATUS/VIDEO AREA (NEW) */}
+            {(isCalling || isCallActive) && (
+                <div className='relative w-full h-64 bg-black/80 flex items-center justify-center border-b border-purple-500/30'>
+                    {isCalling && <p className='text-white text-xl animate-pulse'>Calling...</p>}
+                    
+                    {isCallActive && (
+                        <>
+                            {/* Remote Video Stream */}
+                            <video 
+                                ref={remoteVideoRef} 
+                                autoPlay 
+                                playsInline 
+                                className={`w-full h-full object-cover ${callType === 'audio' ? 'hidden' : ''}`}
+                            />
+                            {/* Local Video Overlay (Mini view) */}
+                            <video 
+                                ref={localVideoRef} 
+                                autoPlay 
+                                muted 
+                                playsInline 
+                                className={`absolute bottom-4 right-4 w-24 h-24 object-cover rounded-lg border-2 border-purple-500 shadow-xl ${callType === 'audio' ? 'hidden' : ''}`}
+                            />
+                            {/* Audio-only indicator */}
+                            {callType === 'audio' && (
+                                <div className='flex flex-col items-center text-white'>
+                                    <FaPhone className='text-5xl text-purple-400 mb-4 animate-pulse' />
+                                    <p className='text-xl'>Voice Call with {friend.name}</p>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
             )}
-            
-            {/* CALL STATUS/WAITING MESSAGE FOR CALLER */}
-            {inCall && isCallInitiator && !remoteVideo.current?.srcObject && !incomingCall && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-800 p-4 rounded-xl text-white z-50 text-center">
-                    <p>Waiting for **{friend.name}** to accept the call...</p>
-                    <button onClick={endCall} className="bg-red-600 px-4 py-1 rounded-full text-white mt-2 hover:bg-red-700">
-                        Cancel Call
-                    </button>
-                </div>
-            )}
 
-
-            {/* VIDEO CALL SCREEN */}
-            {inCall && (
-                <div className="absolute inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center z-50">
-                    {/* Remote Video (Friend) */}
-                    <video ref={remoteVideo} autoPlay playsInline className="w-full h-full object-cover" />
-
-                    {/* Local Video (Self) */}
-                    <video ref={localVideo} autoPlay playsInline muted className="w-40 h-auto rounded-lg border-2 border-white absolute top-5 right-5 shadow-lg" />
-
-                    <button onClick={endCall} className="bg-red-600 px-6 py-3 rounded-full text-white mt-4 absolute bottom-5">
-                        End Call
-                    </button>
-                </div>
-            )}
 
             {/* CHAT AREA */}
             <div className='flex-1 overflow-y-auto p-4 space-y-3 bg-gray-900/50'>
@@ -390,42 +391,68 @@ export default function SelectedChats({ friend }) {
 
                     return (
                         <div key={index} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-xs md:max-w-md rounded-2xl p-3 
-                                ${mine ? 'bg-purple-600 text-white' : 'bg-gray-700 text-white'}`}>
-                                <p>{msg.content}</p>
-                                <div className='text-xs mt-1 opacity-70 text-right'>
-                                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            <div
+                                className={`max-w-xs md:max-w-md rounded-2xl p-3
+                                    ${mine
+                                        ? 'bg-gradient-to-r from-purple-600 to-red-600 text-white rounded-br-none'
+                                        : 'bg-gray-700/80 text-white rounded-bl-none border border-purple-500/20'}
+                                `}
+                            >
+                                <p className='text-sm'>{msg.content}</p>
+
+                                <div className='flex items-center justify-end space-x-1 mt-1 text-xs'>
+                                    <span>
+                                        {new Date(msg.timestamp).toLocaleTimeString([], {
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                        })}
+                                    </span>
+
+                                    {mine && <FaCheck className='text-green-500 text-xs' />}
                                 </div>
                             </div>
                         </div>
                     );
                 })}
+
                 <div ref={messagesEndRef} />
             </div>
 
             {/* INPUT */}
             <div className='bg-gray-800/70 border-t border-purple-500/30 p-4'>
                 <div className='flex items-center space-x-3'>
-                    <FaPaperclip className='text-purple-300 cursor-pointer' />
-                    <FaSmile className='text-purple-300 cursor-pointer' />
+                    <button className='text-purple-300 hover:text-white p-2'>
+                        <FaPaperclip />
+                    </button>
 
-                    <textarea
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        onKeyDown={(e) =>
-                            e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendMessage())
-                        }
-                        placeholder='type a message...'
-                        className='flex-1 bg-gray-700 text-white p-3 rounded-xl resize-none'
-                        rows={1}
-                    />
+                    <button className='text-purple-300 hover:text-white p-2'>
+                        <FaSmile />
+                    </button>
+
+                    <div className='flex-1'>
+                        <textarea
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                            onKeyDown={(e) =>
+                                e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendChatMessage())
+                            }
+                            placeholder='type a message...'
+                            rows='1'
+                            className='w-full bg-gray-700/80 border border-purple-500/30 rounded-2xl px-4 py-3 text-white resize-none focus:ring-2 focus:ring-purple-500'
+                        />
+                    </div>
 
                     {message.trim() ? (
-                        <button onClick={sendMessage} className='bg-purple-600 p-3 rounded-full text-white hover:bg-purple-700 transition-colors'>
+                        <button
+                            onClick={sendChatMessage}
+                            className='bg-gradient-to-r from-purple-600 to-red-600 text-white p-3 rounded-full hover:scale-105'
+                        >
                             <FaPaperPlane />
                         </button>
                     ) : (
-                        <FaMicrophone className='text-purple-300 cursor-pointer' />
+                        <button className='text-purple-300 hover:text-white p-3'>
+                            <FaMicrophone />
+                        </button>
                     )}
                 </div>
             </div>

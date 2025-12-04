@@ -1,72 +1,41 @@
-// server side code
 export const chatHandler = (io, socket) => {
 
-    // Join Room
-    socket.on("joinRoom", (roomId) => {
+    socket.on('joinRoom', (roomId) => {
         socket.join(roomId);
-        console.log(`Socket ${socket.id} joined room ${roomId}`);
     });
 
-    // Chat Message
+    // --- Message Handling ---
+    // THIS IS NOW THE ONLY EMIT SOURCE for messages
     socket.on("sendMessageServer", ({ roomId, message }) => {
-        // Broadcast message to everyone in the room (including sender, who handles it client-side)
         io.to(roomId).emit("serverMessage", message);
     });
 
-    // -----------------------------------
-    // VIDEO CALL SIGNALING
-    // -----------------------------------
+    // --- WebRTC Signaling Handlers (NEW) ---
 
-    // 1. Call Request (Sent by Caller)
-    socket.on("callRequest", ({ roomId, callerId }) => {
-        console.log(`Call request from ${callerId} in room ${roomId}`);
-        // Notify the *other* person in the room (the callee)
-        socket.to(roomId).emit("incomingCall", { callerId });
+    // 1. Sending an Offer to the other user in the room
+    socket.on("webrtc-offer", ({ roomId, offer }) => {
+        // Broadcast the offer to the other user in the room (excluding the sender)
+        socket.to(roomId).emit("webrtc-offer", offer);
     });
 
-    // 2. Call Accepted (Sent by Callee)
-    socket.on("callAccepted", ({ roomId }) => {
-        console.log(`Call accepted in room ${roomId}`);
-        // Notify the *other* person (the original caller) to start WebRTC setup
-        socket.to(roomId).emit("callAccepted");
+    // 2. Sending an Answer back to the user who sent the Offer
+    socket.on("webrtc-answer", ({ roomId, answer }) => {
+        // Broadcast the answer to the other user in the room (excluding the sender)
+        socket.to(roomId).emit("webrtc-answer", answer);
     });
 
-    // 3. Call Rejected (Sent by Callee)
-    socket.on("callRejected", ({ roomId }) => {
-        console.log(`Call rejected in room ${roomId}`);
-        // Notify the *other* person (the original caller)
-        socket.to(roomId).emit("callRejected");
+    // 3. Sending ICE Candidates (network info) to the other user
+    socket.on("webrtc-ice-candidate", ({ roomId, candidate }) => {
+        // Broadcast the candidate to the other user in the room (excluding the sender)
+        socket.to(roomId).emit("webrtc-ice-candidate", candidate);
+    });
+    
+    // 4. Handle call end
+    socket.on("webrtc-call-end", ({ roomId }) => {
+        // Notify the other user the call has ended
+        socket.to(roomId).emit("webrtc-call-end");
     });
 
-    // 4. WebRTC Offer (Sent by Caller after acceptance)
-    socket.on("webrtcOffer", ({ roomId, offer }) => {
-        // Pass Offer to the *other* person (the callee)
-        socket.to(roomId).emit("webrtcOffer", offer);
-    });
 
-    // 5. WebRTC Answer (Sent by Callee)
-    socket.on("webrtcAnswer", ({ roomId, answer }) => {
-        // Pass Answer back to the *other* person (the original caller)
-        socket.to(roomId).emit("webrtcAnswer", answer);
-    });
-
-    // 6. ICE Candidate (Sent by both Caller and Callee)
-    socket.on("iceCandidate", ({ roomId, candidate }) => {
-        // Pass ICE candidate to the *other* person
-        socket.to(roomId).emit("iceCandidate", candidate);
-    });
-
-    // 7. End Call (Sent by the user who hangs up)
-    socket.on("endCall", ({ roomId }) => {
-        console.log(`Call ended in room ${roomId}`);
-        // Notify the *other* person to end the call
-        socket.to(roomId).emit("callEnded");
-    });
-
-    // Handle disconnect to clean up
-    socket.on('disconnect', () => {
-        console.log(`Socket disconnected: ${socket.id}`);
-        // Optionally, you might want to emit a "userLeft" event here 
-        // if this disconnect happens during a call, but 'endCall' handles it better.
-    });
+    socket.on('disconnect', () => {});
 };
