@@ -14,21 +14,24 @@ export const chatHandler = (io, socket) => {
             signal: signalData, 
             from, 
             name,
-            type, // 'video' or 'voice'
+            type,
             roomId 
         });
     });
 
     socket.on('acceptCall', ({ signal, to, roomId }) => {
-        socket.to(roomId).emit('callAccepted', signal);
+        socket.to(roomId).emit('callAccepted', { 
+            signal,
+            from: to 
+        });
     });
 
     socket.on('endCall', ({ roomId, userId }) => {
-        socket.to(roomId).emit('callEnded', { userId });
+        io.to(roomId).emit('callEnded', { userId });
     });
 
     socket.on('rejectCall', ({ roomId }) => {
-        socket.to(roomId).emit('callRejected');
+        io.to(roomId).emit('callRejected');
     });
 
     socket.on('callerICE', ({ roomId, candidate }) => {

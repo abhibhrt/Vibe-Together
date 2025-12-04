@@ -8,7 +8,9 @@ import api from '@/utils/api';
 import { useUserStore } from '@/store/useUserStore';
 
 // Import components
-import CallManager from './coms/call.manager.jsx';
+import useWebRTC from '@/app/hooks/useWebRTC.js';
+import CallInterface from './coms/call.interface.jsx';
+import CallButtons from './coms/call.buttons.jsx';
 import MessageList from './coms/message.list.jsx';
 import MessageInput from './coms/message.input.jsx';
 
@@ -19,7 +21,6 @@ export default function SelectedChats({ friend }) {
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([]);
     const [roomId, setRoomId] = useState(null);
-    const [isInCall, setIsInCall] = useState(false);
 
     if (!friend) {
         return (
@@ -54,8 +55,7 @@ export default function SelectedChats({ friend }) {
                 // Initialize socket connection
                 socket = io(process.env.NEXT_PUBLIC_API_URL, {
                     withCredentials: true,
-                    transports: ['websocket', 'polling'],
-                    upgrade: true
+                    transports: ['websocket', 'polling']
                 });
 
                 // Join the room
@@ -70,14 +70,7 @@ export default function SelectedChats({ friend }) {
                     setMessages(prev => [...prev, fixed]);
                 });
 
-                // Handle connection errors
-                socket.on('connect_error', (error) => {
-                    console.error('Socket connection error:', error);
-                });
-
-                socket.on('disconnect', (reason) => {
-                    console.log('Socket disconnected:', reason);
-                });
+                console.log('Chat initialized successfully');
 
             } catch (error) {
                 console.error('Error initializing chat:', error);
@@ -86,6 +79,7 @@ export default function SelectedChats({ friend }) {
 
         initChat();
 
+        // Cleanup
         return () => {
             if (socket) {
                 socket.disconnect();
@@ -94,19 +88,15 @@ export default function SelectedChats({ friend }) {
         };
     }, [friend.id]);
 
-    // Initialize CallManager
-    const callManager = CallManager({
-        socket,
-        roomId,
-        user,
-        friend,
-        onCallStart: () => setIsInCall(true),
-        onCallEnd: () => setIsInCall(false)
-    });
+    // Initialize WebRTC hook
+    const webrtc = useWebRTC(socket, roomId, user, friend);
 
     // Send message function
     const sendMessage = async () => {
-        if (!message.trim() || !roomId || !socket) return;
+        if (!message.trim() || !roomId || !socket) {
+            console.log('Cannot send message:', { message: message.trim(), roomId, socket: !!socket });
+            return;
+        }
 
         try {
             // Save to database
@@ -130,48 +120,94 @@ export default function SelectedChats({ friend }) {
         }
     };
 
+    // Handle Enter key for message sending
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    };
+
     return (
         <div className='min-h-screen bg-gradient-to-br from-purple-900 via-gray-900 to-red-900 flex flex-col relative'>
-            {/* Render Call Interface */}
-            <callManager.CallInterface />
+            {/* Call Interface */}
+            <CallInterface
+                isInCall={webrtc.isInCall}
+                isCalling={webrtc.isCalling}
+                isReceivingCall={webrtc.isReceivingCall}
+                callerName={webrtc.callerName}
+                callType={webrtc.callType}
+                friend={friend}
+                isMuted={webrtc.isMuted}
+                isVideoOff={webrtc.isVideoOff}
+                localVideoRef={webrtc.localVideoRef}
+                remoteVideoRef={webrtc.remoteVideoRef}
+                startCall={webrtc.startCall}
+                acceptCall={webrtc.acceptCall}
+                rejectCall={webrtc.rejectCall}
+                endCall={webrtc.endCall}
+                toggleMute={webrtc.toggleMute}
+                toggleVideo={webrtc.toggleVideo}
+            />
 
             {/* Header */}
-            <div className='bg-gray-800/70 border-b border-purple-500/30 p-4 flex items-center justify-between sticky top-0 z-30 backdrop-blur-xl'>
-                <div className='flex items-center space-x-4'>
-                    <Link href='/' className='text-purple-300 hover:text-white md:hidden p-2 transition-colors'>
+            <div className={`bg-gray-800/70 border-b border-purple-500/30 py-4 flex items-center justify-between sticky top-0 z-30 backdrop-blur-xl transition-all ${webrtc.isInCall ? 'opacity-50' : ''}`}>
+                <div className='flex items-center space-x-1'>
+                    <Link
+                        href='/'
+                        className='text-purple-300 hover:text-white md:hidden p-2 transition-colors hover:bg-purple-500/20 rounded-full'
+                    >
                         <FaArrowLeft />
                     </Link>
                     <div className='flex items-center space-x-3'>
-                        <img 
-                            src={friend.avatar} 
+                        <img
+                            src={friend.avatar}
                             alt={friend.name}
-                            className='w-10 h-10 rounded-full border-2 border-purple-500/50'
+                            className='w-12 h-12 rounded-full border-2 border-purple-500/60 shadow-lg'
                         />
                         <div>
-                            <h2 className='text-white font-semibold'>{friend.name}</h2>
+                            <h2 className='text-white font-bold text-lg'>{friend.name}</h2>
                             <p className='text-purple-300 text-sm'>
-                                {isInCall ? 'In a call' : 'Online'}
+                                {webrtc.isInCall ? '📞 In a call' :
+                                    webrtc.isCalling ? '📞 Calling...' : '🟢 Online'}
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
                     {/* Call Buttons */}
-                    <callManager.CallButtons />
+                    <CallButtons
+                        isCalling={webrtc.isCalling}
+                        isInCall={webrtc.isInCall}
+                        startCall={webrtc.startCall}
+                        endCall={webrtc.endCall}
+                    />
+
+                    <button
+                        className='text-purple-300 hover:text-white p-2 transition-colors hover:bg-purple-500/20 rounded-full'
+                        title="More options"
+                    >
+                        <FaEllipsisV />
+                    </button>
                 </div>
             </div>
 
             {/* Message List */}
-            <MessageList messages={messages} user={user} />
+            <div className={`transition-all ${webrtc.isInCall ? 'opacity-30 blur-sm' : ''}`}>
+                <MessageList messages={messages} user={user} />
+            </div>
 
             {/* Message Input */}
-            <MessageInput 
-                message={message}
-                setMessage={setMessage}
-                sendMessage={sendMessage}
-                isInCall={isInCall}
-            />
+            <div className={`transition-all ${webrtc.isInCall ? 'opacity-30 blur-sm' : ''}`}>
+                <MessageInput
+                    message={message}
+                    setMessage={setMessage}
+                    sendMessage={sendMessage}
+                    handleKeyDown={handleKeyDown}
+                    isInCall={webrtc.isInCall}
+                />
+            </div>
         </div>
     );
 }
