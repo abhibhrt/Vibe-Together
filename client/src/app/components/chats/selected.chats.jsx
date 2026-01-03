@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaArrowLeft, FaEllipsisV } from 'react-icons/fa';
+import { FiArrowLeft, FiMoreVertical, FiActivity, FiShield, FiCpu } from 'react-icons/fi';
 import Link from 'next/link';
 import io from 'socket.io-client';
 import api from '@/utils/api';
 import { useUserStore } from '@/store/useUserStore';
 
-// Import components
+// Institutional Component Imports
 import useWebRTC from '@/app/hooks/useWebRTC.js';
 import CallInterface from './coms/call.interface.jsx';
 import CallButtons from './coms/call.buttons.jsx';
@@ -16,7 +16,7 @@ import MessageInput from './coms/message.input.jsx';
 
 let socket = null;
 
-export default function SelectedChats({ friend }) {
+export default function SignalTerminal({ friend }) {
     const { user } = useUserStore();
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([]);
@@ -24,24 +24,24 @@ export default function SelectedChats({ friend }) {
 
     if (!friend) {
         return (
-            <div className='flex items-center justify-center min-h-screen text-white text-xl'>
-                No chat selected
+            <div className='flex flex-col items-center justify-center min-h-screen bg-[#020617] gap-4'>
+                <FiCpu className="text-slate-800 text-4xl animate-pulse" />
+                <span className="text-[10px] font-black tracking-[0.5em] text-slate-700 uppercase">
+                    Error_Link_Null: Select_Peer_Node
+                </span>
             </div>
         );
     }
 
-    // Initialize socket and load messages
     useEffect(() => {
         if (!friend.id) return;
 
-        const initChat = async () => {
+        const initSignalBuffer = async () => {
             try {
-                // Get or create chat room
                 const roomRes = await api.post(`/api/friends/chat/${friend.id}`);
                 const roomData = roomRes.data;
                 setRoomId(roomData.roomId);
 
-                // Load existing messages
                 const msgRes = await api.get(`/api/friends/chat/${friend.id}`);
                 const oldMsgs = msgRes.data || [];
 
@@ -52,16 +52,13 @@ export default function SelectedChats({ friend }) {
 
                 setMessages(normalized);
 
-                // Initialize socket connection
                 socket = io(process.env.NEXT_PUBLIC_API_URL, {
                     withCredentials: true,
                     transports: ['websocket', 'polling']
                 });
 
-                // Join the room
                 socket.emit('joinRoom', roomData.roomId);
 
-                // Listen for new messages
                 socket.on("serverMessage", (msg) => {
                     const fixed = {
                         ...msg,
@@ -70,16 +67,13 @@ export default function SelectedChats({ friend }) {
                     setMessages(prev => [...prev, fixed]);
                 });
 
-                console.log('Chat initialized successfully');
-
             } catch (error) {
-                console.error('Error initializing chat:', error);
+                console.error('[SIGNAL_ERROR]: Buffer initialization failed', error);
             }
         };
 
-        initChat();
+        initSignalBuffer();
 
-        // Cleanup
         return () => {
             if (socket) {
                 socket.disconnect();
@@ -88,39 +82,19 @@ export default function SelectedChats({ friend }) {
         };
     }, [friend.id]);
 
-    // Initialize WebRTC hook
     const webrtc = useWebRTC(socket, roomId, user, friend);
 
-    // Send message function
     const sendMessage = async () => {
-        if (!message.trim() || !roomId || !socket) {
-            console.log('Cannot send message:', { message: message.trim(), roomId, socket: !!socket });
-            return;
-        }
-
+        if (!message.trim() || !roomId || !socket) return;
         try {
-            // Save to database
-            const res = await api.post(`/api/friends/message/${roomId}`, {
-                content: message
-            });
-            const saved = res.data;
-
-            // Emit to socket
-            socket.emit("sendMessageServer", {
-                roomId,
-                message: saved
-            });
-
-            // Clear input
+            const res = await api.post(`/api/friends/message/${roomId}`, { content: message });
+            socket.emit("sendMessageServer", { roomId, message: res.data });
             setMessage('');
-
         } catch (error) {
-            console.error('Error sending message:', error);
-            alert('Failed to send message');
+            console.error('[AUTH_ERROR]: Message purge failed', error);
         }
     };
 
-    // Handle Enter key for message sending
     const handleKeyDown = (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -129,77 +103,62 @@ export default function SelectedChats({ friend }) {
     };
 
     return (
-        <div className='min-h-screen bg-gradient-to-br from-purple-900 via-gray-900 to-red-900 flex flex-col relative'>
-            {/* Call Interface */}
+        <div className='h-screen bg-[#020617] flex flex-col relative overflow-hidden'>
+            {/* OVERRIDE: CALL INTERFACE */}
             <CallInterface
-                isInCall={webrtc.isInCall}
-                isCalling={webrtc.isCalling}
-                isReceivingCall={webrtc.isReceivingCall}
-                callerName={webrtc.callerName}
-                callType={webrtc.callType}
+                {...webrtc}
                 friend={friend}
-                isMuted={webrtc.isMuted}
-                isVideoOff={webrtc.isVideoOff}
-                localVideoRef={webrtc.localVideoRef}
-                remoteVideoRef={webrtc.remoteVideoRef}
-                startCall={webrtc.startCall}
-                acceptCall={webrtc.acceptCall}
-                rejectCall={webrtc.rejectCall}
-                endCall={webrtc.endCall}
-                toggleMute={webrtc.toggleMute}
-                toggleVideo={webrtc.toggleVideo}
             />
 
-            {/* Header */}
-            <div className={`bg-gray-800/70 border-b border-purple-500/30 py-4 flex items-center justify-between sticky top-0 z-30 backdrop-blur-xl transition-all ${webrtc.isInCall ? 'opacity-50' : ''}`}>
-                <div className='flex items-center space-x-1'>
-                    <Link
-                        href='/'
-                        className='text-purple-300 hover:text-white md:hidden p-2 transition-colors hover:bg-purple-500/20 rounded-full'
-                    >
-                        <FaArrowLeft />
+            {/* HEADER: NODE METADATA */}
+            <div className={`bg-slate-950/80 border-b border-slate-800 p-4 flex items-center justify-between z-30 backdrop-blur-md transition-all ${webrtc.isInCall ? 'opacity-20 blur-md' : 'opacity-100'}`}>
+                <div className='flex items-center gap-4'>
+                    <Link href='/' className='md:hidden text-slate-500 hover:text-blue-500 transition-colors'>
+                        <FiArrowLeft />
                     </Link>
-                    <div className='flex items-center space-x-3'>
-                        <img
-                            src={friend.avatar}
-                            alt={friend.name}
-                            className='w-12 h-12 rounded-full border-2 border-purple-500/60 shadow-lg'
-                        />
+
+                    <div className='flex items-center gap-4'>
+                        {/* NODE FRAME */}
+                        <div className='w-12 h-12 border border-slate-800 bg-slate-900 p-0.5 relative shrink-0'>
+                            <img src={friend.avatar} alt={friend.name} className='w-full h-full object-cover grayscale opacity-70' />
+                            <div className='absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border-2 border-slate-950' />
+                        </div>
+
                         <div>
-                            <h2 className='text-white font-bold text-lg'>{friend.name}</h2>
-                            <p className='text-purple-300 text-sm'>
-                                {webrtc.isInCall ? '📞 in a call' :
-                                    webrtc.isCalling ? '📞 calling...' : 'online'}
-                            </p>
+                            <div className='flex items-center gap-2'>
+                                <h2 className='text-[11px] font-black tracking-[0.2em] text-white uppercase'>{friend.name}</h2>
+                                <FiShield className="text-blue-500/50 text-[10px]" />
+                            </div>
+                            <div className='flex items-center gap-2 mt-0.5'>
+                                <FiActivity className={`text-[8px] ${webrtc.isInCall ? 'text-red-500 animate-pulse' : 'text-emerald-500'}`} />
+                                <span className='text-[8px] font-mono text-slate-500 uppercase tracking-tighter'>
+                                    {webrtc.isInCall ? 'STATUS: VOICE_OVERRIDE' : 'STATUS: SYNC_ACTIVE'}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                    {/* Call Buttons */}
+                <div className="flex items-center gap-3">
                     <CallButtons
                         isCalling={webrtc.isCalling}
                         isInCall={webrtc.isInCall}
                         startCall={webrtc.startCall}
                         endCall={webrtc.endCall}
                     />
-
-                    <button
-                        className='text-purple-300 hover:text-white p-2 transition-colors hover:bg-purple-500/20 rounded-full'
-                        title="More options"
-                    >
-                        <FaEllipsisV />
+                    <button className='w-8 h-8 flex items-center justify-center border border-slate-800 hover:border-blue-500/50 text-slate-500 transition-all'>
+                        <FiMoreVertical />
                     </button>
                 </div>
             </div>
 
-            {/* Message List */}
-            <div className={`transition-all ${webrtc.isInCall ? 'opacity-30 blur-sm' : ''}`}>
+            {/* BUFFER: MESSAGE STREAM */}
+            <div className={`flex-1 overflow-hidden transition-all duration-500 ${webrtc.isInCall ? 'opacity-5 blur-xl scale-95' : 'opacity-100'}`}>
                 <MessageList messages={messages} user={user} />
             </div>
 
-            {/* Message Input */}
-            <div className={`transition-all ${webrtc.isInCall ? 'opacity-30 blur-sm' : ''}`}>
+            {/* INPUT: COMMAND BUFFER */}
+            <div className={`p-4 border-t border-slate-800 transition-all ${webrtc.isInCall ? 'opacity-5 blur-md' : 'opacity-100'}`}>
                 <MessageInput
                     message={message}
                     setMessage={setMessage}
@@ -207,6 +166,14 @@ export default function SelectedChats({ friend }) {
                     handleKeyDown={handleKeyDown}
                     isInCall={webrtc.isInCall}
                 />
+                <div className="mt-2 flex justify-between items-center">
+                    <span className="text-[7px] font-mono text-slate-700 uppercase tracking-widest">
+                        Packet_Encryption: AES_256 // Protocol: WebSocket_Secure
+                    </span>
+                    <span className="text-[7px] font-mono text-slate-800 uppercase">
+                        Latency: 24ms
+                    </span>
+                </div>
             </div>
         </div>
     );

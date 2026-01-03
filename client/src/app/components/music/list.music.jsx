@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaMusic } from 'react-icons/fa';
+import { FiMusic, FiDatabase, FiTrash2, FiYoutube, FiActivity } from 'react-icons/fi';
 import api from '@/utils/api';
 import DeleteMusic from './remove.music';
 import { useUserStore } from '@/store/useUserStore';
 import { usePlaybackStore, usePlaylistStore } from '@/store/useSongStore';
 
-export default function ListMusic({ searchQuery }) {
+export default function AssetIndexTable({ searchQuery }) {
   const [filteredMusic, setFilteredMusic] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchFailed, setFetchFailed] = useState(false);
@@ -21,19 +21,14 @@ export default function ListMusic({ searchQuery }) {
       if (!url) return null;
       if (url.includes('youtu.be')) return url.split('youtu.be/')[1].split('?')[0];
       return new URL(url).searchParams.get('v');
-    } catch {
-      return null;
-    }
+    } catch { return null; }
   };
 
-  // fetch ALL songs once
   const fetchMusic = async () => {
     setLoading(true);
     setFetchFailed(false);
-
     try {
       const res = await api.get(`/api/musics/getall`);
-
       if (res?.data?.music) {
         setFilteredMusic(res.data.music);
         setAllSongs(res.data.music);
@@ -41,7 +36,6 @@ export default function ListMusic({ searchQuery }) {
         setFetchFailed(true);
       }
     } catch (err) {
-      console.error('fetch error:', err);
       setFetchFailed(true);
     } finally {
       setLoading(false);
@@ -49,29 +43,22 @@ export default function ListMusic({ searchQuery }) {
   };
 
   useEffect(() => {
-    if (allSongs.length === 0)
-      fetchMusic();
+    if (allSongs.length === 0) fetchMusic();
   }, []);
 
-  // local filter (song name + singer name)
   useEffect(() => {
     if (!searchQuery) {
       setFilteredMusic(allSongs);
       return;
     }
-
     const q = searchQuery.toLowerCase();
-
     const filtered = allSongs.filter((item) => {
       const nameMatch = item.music_name?.toLowerCase().includes(q);
-
       const singerMatch = Array.isArray(item.singers)
         ? item.singers.some(s => s.toLowerCase().includes(q))
         : item.singers?.toLowerCase().includes(q);
-
       return nameMatch || singerMatch;
     });
-
     setFilteredMusic(filtered);
   }, [searchQuery, allSongs]);
 
@@ -82,77 +69,111 @@ export default function ListMusic({ searchQuery }) {
 
   const renderItem = (music, index) => {
     const videoId = getYoutubeId(music.url);
-    const thumbnail = videoId
-      ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
-      : null;
+    const thumbnail = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
 
     return (
       <div
         key={music._id}
-        className='relative bg-gray-800/70 cursor-pointer backdrop-blur-lg p-4 border border-purple-500/30 hover:border-purple-500/50 transition-all duration-300 animate-fade-in'
-        style={{ animationDelay: `${index * 0.06}s` }}
+        className='group relative bg-slate-950 border-b border-slate-900 p-3 hover:bg-blue-950/10 hover:border-blue-900/50 transition-all flex items-center gap-4'
       >
-        <div className='flex items-center space-x-4'>
-          <div
-            onClick={() => handleSetMusic(music)}
-            className='w-16 h-16 rounded-xl overflow-hidden bg-gray-700'
-          >
-            {thumbnail ? (
-              <img src={thumbnail} alt={music.music_name} className='w-full h-full object-cover' />
-            ) : (
-              <div className='w-full h-full bg-gradient-to-br from-purple-600 to-red-600 flex items-center justify-center'>
-                <FaMusic className='text-white text-xl' />
-              </div>
-            )}
-          </div>
+        {/* ASSET_NUMERATION */}
+        <span className="text-[9px] font-mono text-slate-700 w-4">
+          {String(index + 1).padStart(2, '0')}
+        </span>
 
-          <div className='flex-1 min-w-0'>
-            <h3 onClick={() => handleSetMusic(music)} className='text-white font-semibold truncate'>
+        {/* THUMBNAIL_BUFFER */}
+        <div
+          onClick={() => handleSetMusic(music)}
+          className='relative w-12 h-12 border border-slate-800 bg-slate-900 cursor-pointer overflow-hidden'
+        >
+          {thumbnail ? (
+            <img src={thumbnail} alt="asset" className='w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all' />
+          ) : (
+            <div className='w-full h-full flex items-center justify-center bg-blue-900/20'>
+              <FiMusic className='text-blue-500 text-xs' />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 pointer-events-none" />
+        </div>
+
+        {/* METADATA_BLOCK */}
+        <div className='flex-1 min-w-0 flex flex-col' onClick={() => handleSetMusic(music)}>
+          <div className="flex items-center gap-2">
+            <h3 className='text-[12px] font-bold text-slate-200 truncate tracking-tight uppercase'>
               {music.music_name}
             </h3>
-            <p className='text-purple-300 text-sm truncate'>
-              {Array.isArray(music.singers) ? music.singers.join(', ') : music.singers || 'unknown'}
-            </p>
+            <span className="text-[7px] px-1 border border-slate-800 text-slate-600 font-black">PCM_AUDIO</span>
           </div>
+          <p className='text-[10px] font-mono text-blue-500/70 truncate uppercase tracking-tighter'>
+            CONTRIBUTOR: {Array.isArray(music.singers) ? music.singers.join(' // ') : music.singers || 'NULL'}
+          </p>
+        </div>
 
+        {/* ACTION_CONTROL */}
+        <div className="flex items-center gap-3">
+          <div className="hidden md:flex flex-col items-end mr-4">
+            <span className="text-[7px] font-mono text-slate-700 uppercase">Status</span>
+            <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Online</span>
+          </div>
+          
           {user && (
-            <DeleteMusic
-              musicId={music._id}
-              publicId={music.public_id}
-              url={music.url}
-              onDeleted={fetchMusic}
-            />
+            <div className="group-hover:opacity-100 transition-opacity">
+               <DeleteMusic
+                musicId={music._id}
+                publicId={music.public_id}
+                url={music.url}
+                onDeleted={fetchMusic}
+              />
+            </div>
           )}
         </div>
 
-        <p className='absolute bottom-2 right-4 text-[10px] text-purple-400 opacity-70'>
-          source: youtube
-        </p>
+        {/* DATA_SOURCE_TAG */}
+        <div className="absolute top-1 right-2 flex items-center gap-1 opacity-20 group-hover:opacity-60 transition-opacity">
+          <FiYoutube size={8} className="text-red-500" />
+          <span className="text-[6px] font-mono text-slate-400">YOUTUBE_NODE</span>
+        </div>
       </div>
     );
   };
 
   return (
-    <div className='music-container max-h-[calc(100vh-140px)] overflow-y-auto'>
+    <div className='max-h-[calc(100vh-280px)] overflow-y-auto custom-scrollbar overflow-x-hidden bg-slate-950/50'>
+      {/* TABLE_HEADER */}
+      <div className="sticky top-0 bg-slate-900/80 border-b border-slate-800 p-2 flex items-center gap-4 z-10">
+        <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-12">Entry_Index // Source_Stream</span>
+      </div>
+
       {filteredMusic.map((music, index) => renderItem(music, index))}
 
       {loading && (
-        <div className='flex justify-center py-6'>
-          <div className='w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin' />
+        <div className='flex flex-col items-center justify-center py-12 gap-3'>
+          <div className='w-48 h-1 bg-slate-900 relative overflow-hidden'>
+            <div className="absolute inset-0 bg-blue-600 animate-[loading_1.5s_infinite]" style={{ width: '30%' }} />
+          </div>
+          <span className="text-[8px] font-mono text-blue-500 animate-pulse uppercase tracking-[0.4em]">Recovering_Data_Packets...</span>
         </div>
       )}
 
       {!loading && filteredMusic.length === 0 && (
-        <div className='text-center py-6 text-purple-300'>
-          no results found
+        <div className='text-center py-12 border border-dashed border-slate-900 m-4'>
+          <FiActivity className="mx-auto text-slate-800 mb-2" />
+          <span className="text-[10px] font-mono text-slate-700 uppercase tracking-widest">Search_Query_Returned_Zero_Hits</span>
         </div>
       )}
 
       {fetchFailed && (
-        <div className='text-center py-6 text-red-400 text-sm'>
-          failed to load music
+        <div className='text-center py-12 text-red-500 text-[10px] font-black uppercase tracking-[0.3em]'>
+          Critical_Error: Failed_To_Initialize_Music_Buffer
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes loading {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(400%); }
+        }
+      `}</style>
     </div>
   );
 }

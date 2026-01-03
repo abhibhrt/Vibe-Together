@@ -1,12 +1,12 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { FaCheck } from 'react-icons/fa';
+import { FiCheck, FiTerminal } from 'react-icons/fi';
 
-export default function MessageList({ messages, user }) {
+export default function SignalHistory({ messages, user }) {
     const messagesEndRef = useRef(null);
 
-    // Auto scroll to bottom
+    // Auto scroll to bottom sequence
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
@@ -14,10 +14,13 @@ export default function MessageList({ messages, user }) {
     const isMe = (msg) => msg.senderId === String(user?.id);
 
     return (
-        <div className='flex-1 overflow-y-auto p-4 space-y-3 fixed top-18 bottom-17 left-0 right-0 '>
+        <div className='flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar bg-[#020617]'>
             {messages.length === 0 ? (
-                <div className="text-center text-gray-400 py-8">
-                    <p>no messages yet. start the conversation!</p>
+                <div className="flex flex-col items-center justify-center py-20 gap-3 border border-dashed border-slate-900">
+                    <FiTerminal className="text-slate-800 text-2xl" />
+                    <span className="text-[8px] font-black tracking-[0.4em] text-slate-700 uppercase">
+                        History_Buffer_Null // Awaiting_Signal
+                    </span>
                 </div>
             ) : (
                 messages.map((msg, index) => {
@@ -26,28 +29,47 @@ export default function MessageList({ messages, user }) {
                     return (
                         <div key={index} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
                             <div
-                                className={`max-w-xs md:max-w-md rounded-2xl p-3
-                                    ${mine
-                                        ? 'bg-gradient-to-r from-purple-600 to-red-600 text-white rounded-br-none'
-                                        : 'bg-gray-700/80 text-white rounded-bl-none border border-purple-500/20'}
-                                `}
+                                className={`max-w-[85%] md:max-w-[70%] p-3 border transition-all ${mine
+                                        ? 'bg-blue-950/20 border-blue-900/50 text-slate-100'
+                                        : 'bg-slate-900/40 border-slate-800 text-slate-300'
+                                    }`}
                             >
-                                <p className='text-sm'>{msg.content}</p>
-                                <div className='flex items-center justify-end space-x-1 mt-1 text-xs'>
-                                    <span>
-                                        {new Date(msg.timestamp).toLocaleTimeString([], {
+                                {/* PACKET HEADER */}
+                                <div className="flex items-center gap-2 mb-1.5 opacity-50">
+                                    <span className="text-[7px] font-black tracking-widest uppercase">
+                                        {mine ? 'LOCAL_NODE' : 'REMOTE_PEER'}
+                                    </span>
+                                    <div className="h-[1px] flex-1 bg-current opacity-20" />
+                                </div>
+
+                                <p className='text-[11px] leading-relaxed font-medium tracking-tight'>
+                                    {msg.content}
+                                </p>
+
+                                {/* PACKET FOOTER */}
+                                <div className='flex items-center justify-end space-x-2 mt-2 pt-1.5 border-t border-white/5'>
+                                    <span className='text-[7px] font-mono text-slate-500 uppercase tracking-tighter'>
+                                        TS: {new Date(msg.timestamp).toLocaleTimeString([], {
+                                            hour12: false,
                                             hour: '2-digit',
                                             minute: '2-digit',
+                                            second: '2-digit'
                                         })}
                                     </span>
-                                    {mine && <FaCheck className='text-green-500 text-xs' />}
+
+                                    {mine && (
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-[6px] font-black text-emerald-500 tracking-tighter">[ACK]</span>
+                                            <FiCheck className='text-emerald-500 text-[8px]' />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
                     );
                 })
             )}
-            <div ref={messagesEndRef} />
+            <div ref={messagesEndRef} className="h-4" />
         </div>
     );
 }

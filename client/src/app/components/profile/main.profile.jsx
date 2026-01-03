@@ -5,10 +5,11 @@ import { useUserStore } from '@/store/useUserStore';
 import SigninPage from '../auth/signin.auth';
 import SignupPage from '../auth/signup.auth';
 import api from '@/utils/api';
-import { FaHeart, FaEdit, FaCamera, FaMusic, FaHistory, FaCog } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiEdit3, FiCamera, FiSettings, FiShield, FiGlobe, FiCreditCard, FiCpu, FiUser } from 'react-icons/fi';
 import SignOutPage from '../auth/signout.auth';
 
-export default function Profile() {
+export default function IdentityCore() {
   const { user, setUser } = useUserStore();
 
   const [backuser, setBackuser] = useState(false);
@@ -64,7 +65,7 @@ export default function Profile() {
         setEditMode(false);
       }
     } catch (err) {
-      console.error('update failed:', err);
+      console.error('[REGISTRY_ERROR]: Update sequence failed', err);
     } finally {
       setLoading(false);
     }
@@ -78,136 +79,147 @@ export default function Profile() {
     );
 
   return (
-    <div>
-      <div className='w-full max-w-md space-y-6 animate-fade-in'>
-        <div className='bg-gray-800/70 backdrop-blur-lg p-6 shadow-2xl shadow-purple-500/20 transition-all duration-500 hover:shadow-purple-500/30'>
-          <div className='relative group mb-6'>
-            <div className='relative w-32 h-32 mx-auto'>
-              <div className='absolute -inset-2 bg-gradient-to-r from-purple-600 to-red-600 rounded-full opacity-75 group-hover:opacity-100 blur transition-all duration-500 animate-pulse'></div>
-              <div className='relative w-32 h-32 bg-gradient-to-br from-purple-700 to-red-700 rounded-full flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105'>
-                {preview ? (
+    <div className='max-w-xl mx-auto'>
+      <div className='space-y-8'>
+        {/* IDENTITY MODULE */}
+        <section className='border border-slate-800 bg-slate-900/20 p-8 rounded-sm relative overflow-hidden'>
+          <div className='absolute top-0 right-0 p-2'>
+            <span className='text-[8px] font-mono text-slate-700 tracking-tighter uppercase'>
+                ID_STATE: {editMode ? 'UNSTABLE_MODIFICATION' : 'ENCRYPTED_STABLE'}
+            </span>
+          </div>
+
+          <div className='flex flex-col items-center mb-8'>
+            <div className='relative group'>
+              {/* SPECIMEN FRAME */}
+              <div className='relative w-32 h-32 border border-slate-700 bg-[#020617] p-1 overflow-hidden'>
+                <div className='absolute inset-0 bg-blue-500/5 pointer-events-none' />
+                {preview || user?.avatar?.url ? (
                   <img
-                    src={preview}
-                    alt='avatar'
-                    className='w-full h-full object-cover rounded-full'
-                  />
-                ) : user?.avatar?.url ? (
-                  <img
-                    src={user.avatar.url}
-                    alt='avatar'
-                    className='w-full h-full object-cover rounded-full'
+                    src={preview || user.avatar.url}
+                    alt='specimen'
+                    className={`w-full h-full object-cover transition-all ${!editMode && 'opacity-70'}`}
                   />
                 ) : (
-                  <span className='text-white text-xl font-bold'>
-                    {user?.name?.[0]?.toUpperCase() || 'U'}
-                  </span>
+                  <div className='w-full h-full flex items-center justify-center bg-slate-900'>
+                    <FiUser className='text-slate-700 text-4xl' />
+                  </div>
                 )}
+                
+                {/* SCANLINE ANIMATION */}
+                <div className='absolute inset-0 w-full h-[2px] bg-blue-500/20 animate-scanline' />
+                
+                {/* CORNER ACCENTS */}
+                <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-blue-500" />
+                <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-blue-500" />
               </div>
+
               {editMode && (
-                <label className='absolute bottom-2 right-2 bg-gradient-to-r from-purple-600 to-red-600 p-2 rounded-full cursor-pointer transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-purple-500/50'>
-                  <FaCamera className='text-white text-sm' />
-                  <input
-                    type='file'
-                    accept='image/*'
-                    className='hidden'
-                    onChange={handleFileChange}
-                  />
+                <label className='absolute -bottom-2 -right-2 bg-blue-600 border border-blue-400 p-2 cursor-pointer hover:bg-blue-500 transition-all'>
+                  <FiCamera className='text-white text-xs' />
+                  <input type='file' accept='image/*' className='hidden' onChange={handleFileChange} />
                 </label>
               )}
             </div>
           </div>
-          {editMode ? (
-            <div className='space-y-4 animate-slide-up'>
-              <div className='space-y-3'>
-                <input
-                  type='text'
-                  name='name'
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder='Your beautiful name'
-                  className='w-full p-4 rounded-xl bg-gray-700/80 border border-purple-500/30 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300'
-                />
-                <input
-                  type='email'
-                  name='email'
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder='your.email@romance.com'
-                  className='w-full p-4 rounded-xl bg-gray-700/80 border border-purple-500/30 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300'
-                />
-              </div>
-              <div className='space-y-2'>
-                <button
-                  disabled={loading}
-                  onClick={handleUpdate}
-                  className='w-full bg-gradient-to-r from-purple-600 to-red-600 text-white py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50 disabled:opacity-50 disabled:transform-none'
-                >
-                  {loading ? (
-                    <div className='flex items-center justify-center space-x-2'>
-                      <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
-                      <span>Saving Your Magic...</span>
-                    </div>
-                  ) : (
-                    'Save Changes'
-                  )}
-                </button>
-                <button
-                  onClick={() => {
-                    setPreview(null);
-                    setEditMode(false);
-                  }}
-                  className='w-full bg-gray-700/80 text-white py-4 rounded-xl font-semibold border border-gray-600 transition-all duration-300 hover:bg-gray-600/80 hover:scale-105'
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className='text-center animate-fade-in'>
-              <h2 className='text-white text-2xl font-bold bg-gradient-to-r from-purple-200 to-red-200 bg-clip-text text-transparent'>
-                {user?.name || 'Beautiful Soul'}
-              </h2>
-              <p className='text-purple-300 text-sm'>{user?.email || ''}</p>
 
-              <button
-                onClick={() => setEditMode(true)}
-                className='mt-4 bg-gradient-to-r from-purple-600 to-red-600 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50 flex items-center justify-center space-x-2 mx-auto'
+          <AnimatePresence mode='wait'>
+            {editMode ? (
+              <motion.div 
+                key="edit-fields"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                className='space-y-4'
               >
-                <FaEdit className='text-sm' />
-                <span>Edit Profile</span>
-              </button>
-            </div>
-          )}
-        </div>
-        <div className='p-2 animate-slide-up'>
-          <h3 className='text-white font-semibold mb-4 text-lg flex items-center space-x-2'>
-            <FaCog className='text-purple-400' />
-            <span>Account Settings</span>
+                <div className='grid grid-cols-1 gap-3'>
+                    <div className='relative'>
+                        <span className='absolute top-2 left-3 text-[7px] font-black text-blue-500/60 uppercase'>Field_Name</span>
+                        <input
+                            type='text' name='name' value={formData.name} onChange={handleChange}
+                            className='w-full pt-6 pb-2 px-3 bg-[#020617] border border-slate-800 text-[10px] font-bold tracking-widest text-white uppercase focus:border-blue-500 outline-none transition-all'
+                        />
+                    </div>
+                    <div className='relative'>
+                        <span className='absolute top-2 left-3 text-[7px] font-black text-blue-500/60 uppercase'>Field_Email</span>
+                        <input
+                            type='email' name='email' value={formData.email} onChange={handleChange}
+                            className='w-full pt-6 pb-2 px-3 bg-[#020617] border border-slate-800 text-[10px] font-bold tracking-widest text-white uppercase focus:border-blue-500 outline-none transition-all'
+                        />
+                    </div>
+                </div>
+                
+                <div className='flex gap-2 pt-2'>
+                  <button
+                    disabled={loading} onClick={handleUpdate}
+                    className='flex-1 bg-blue-600 hover:bg-blue-500 text-white text-[9px] font-black tracking-[0.3em] uppercase py-3 transition-all disabled:opacity-50'
+                  >
+                    {loading ? 'EXECUTING_UPDATE...' : 'SAVE_MODIFICATIONS'}
+                  </button>
+                  <button
+                    onClick={() => { setPreview(null); setEditMode(false); }}
+                    className='px-6 border border-slate-700 text-slate-400 text-[9px] font-black tracking-[0.3em] uppercase hover:bg-slate-800 transition-all'
+                  >
+                    ABORT
+                  </button>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="display-fields"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                className='text-center'
+              >
+                <h2 className='text-sm font-black tracking-[0.4em] text-white uppercase'>
+                  {user?.name || 'NODE_UNNAMED'}
+                </h2>
+                <p className='text-[9px] font-mono text-slate-500 uppercase tracking-widest mt-1'>
+                    Network_Alias: {user?.email || 'N/A'}
+                </p>
+
+                <button
+                  onClick={() => setEditMode(true)}
+                  className='mt-6 border border-slate-700 px-6 py-2 text-slate-400 hover:text-blue-400 hover:border-blue-500/50 text-[9px] font-black tracking-[0.3em] uppercase transition-all flex items-center justify-center gap-2 mx-auto'
+                >
+                  <FiEdit3 className='text-xs' />
+                  <span>Modify_Identity</span>
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </section>
+
+        {/* SETTINGS MODULE */}
+        <section className='px-2'>
+          <h3 className='text-[10px] font-black tracking-[0.4em] text-slate-500 uppercase mb-4 flex items-center gap-2'>
+            <FiSettings className='text-blue-500' /> System_Preferences
           </h3>
-          <div className='space-y-2'>
+          <div className='space-y-1'>
             {[
-              { icon: FaMusic, label: 'Subscription'},
-              { icon: FaHeart, label: 'Privacy'},
-              { icon: FaCog, label: 'Language'},
-            ].map((item, index) => (
+              { icon: FiCreditCard, label: 'Asset_Provisioning', sub: 'Subscription' },
+              { icon: FiShield, label: 'Data_Isolation', sub: 'Privacy' },
+              { icon: FiGlobe, label: 'Locale_Config', sub: 'Language' },
+            ].map((item) => (
               <button
                 key={item.label}
-                className='w-full text-left group'
-                style={{ animationDelay: `${index * 0.1}s` }}
+                className='w-full group flex items-center justify-between p-3 border border-transparent hover:border-slate-800 hover:bg-slate-900/20 transition-all'
               >
-                <div className='flex items-center space-x-3'>
-                  <div className='w-10 h-10 bg-gradient-to-r from-purple-600 to-red-600 rounded-lg flex items-center justify-center group-hover:rotate-12 transition-transform duration-300'>
-                    <item.icon className='text-white text-sm' />
+                <div className='flex items-center gap-4'>
+                  <div className='w-8 h-8 border border-slate-800 bg-[#020617] flex items-center justify-center group-hover:border-blue-500/50 transition-colors'>
+                    <item.icon className='text-slate-500 group-hover:text-blue-400 text-xs' />
                   </div>
-                  <div>
-                    <div className='text-white font-medium'>{item.label}</div>
+                  <div className='text-left'>
+                    <div className='text-[9px] font-black tracking-widest text-slate-200 uppercase'>{item.label}</div>
+                    <div className='text-[7px] font-bold text-slate-600 uppercase tracking-widest'>{item.sub}</div>
                   </div>
                 </div>
+                <div className='h-1 w-1 rounded-full bg-slate-800 group-hover:bg-blue-500 transition-colors' />
               </button>
             ))}
-            <SignOutPage />
+            
+            <div className='mt-8 pt-4 border-t border-slate-800/50'>
+                <SignOutPage />
+            </div>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );

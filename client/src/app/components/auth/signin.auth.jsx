@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiMail, FiLock, FiActivity, FiKey, FiTerminal, FiChevronRight } from 'react-icons/fi';
 import api from '@/utils/api.js';
 import { useUserStore } from '@/store/useUserStore.js';
-import { FaHeart, FaMusic, FaEnvelope, FaLock, FaArrowLeft } from 'react-icons/fa';
 
-export default function SigninPage({ handleBackUser }) {
+export default function AccessRecovery({ handleBackUser }) {
     const [isLoading, setIsLoading] = useState(false);
     const { setUser } = useUserStore();
     const [form, setForm] = useState({
@@ -19,12 +20,9 @@ export default function SigninPage({ handleBackUser }) {
         try {
             const res = await api.post('/api/users/signin', form);
             setUser(res?.data?.user);
-            setForm({
-                email: '',
-                password: ''
-            })
+            setForm({ email: '', password: '' });
         } catch (error) {
-            console.error(error);
+            console.error("[ACCESS_DENIED]: Credential mismatch", error);
         } finally {
             setIsLoading(false);
         }
@@ -32,112 +30,136 @@ export default function SigninPage({ handleBackUser }) {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setForm(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setForm(prev => ({ ...prev, [name]: value }));
     };
 
     return (
-        <div className="">
-            <div className="w-full max-w-md animate-fade-in">
-                <div className="bg-gray-800/70 backdrop-blur-lg p-6 md:p-8 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/20">
-                    <div className="text-center mb-8">
-                        <div className="flex justify-center space-x-2 mb-4">
-                            {[1, 2, 3].map((i) => (
-                                <FaHeart 
-                                    key={i}
-                                    className="text-red-400 animate-pulse"
-                                    style={{ animationDelay: `${i * 0.3}s` }}
-                                />
-                            ))}
-                        </div>
-                        <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-300 to-red-300 bg-clip-text text-transparent mb-2 transition-transform duration-300 hover:scale-105">
-                            Welcome Back, Love
+        <div className="flex items-center justify-center p-4">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full max-w-md border border-slate-800 bg-slate-950 rounded-sm shadow-2xl"
+            >
+                {/* TERMINAL HEADER */}
+                <div className="border-b border-slate-800 px-5 py-3 flex items-center justify-between bg-slate-900/50">
+                    <div className="flex items-center gap-3">
+                        <FiTerminal className="text-blue-500 text-xs" />
+                        <span className="text-[9px] font-black tracking-[0.4em] text-slate-400 uppercase">
+                            Auth_Node: 0x882
+                        </span>
+                    </div>
+                    <div className="flex gap-1">
+                        <div className="h-1.5 w-1.5 rounded-full bg-slate-800" />
+                        <div className="h-1.5 w-1.5 rounded-full bg-slate-800" />
+                    </div>
+                </div>
+
+                <div className="p-8">
+                    <div className="mb-10">
+                        <h1 className="text-lg font-bold tracking-[0.25em] text-white uppercase flex items-center gap-2">
+                            Access Recovery
                         </h1>
-                        <p className="text-purple-300 text-sm md:text-base">
-                            Continue your musical journey with us
+                        <div className="mt-2 h-[1px] w-12 bg-blue-500" />
+                        <p className="mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+                            Resuming encrypted session context. <br />
+                            Enter credentials to authorize decryption.
                         </p>
                     </div>
+
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="space-y-2">
-                            <label htmlFor="email" className="text-sm font-medium text-purple-300 block flex items-center space-x-2">
-                                <FaEnvelope className="text-purple-400" />
-                                <span>Email Address</span>
+                        {/* INPUT: EMAIL */}
+                        <div className="group space-y-2">
+                            <label className="text-[8px] font-black tracking-[0.3em] text-slate-500 uppercase flex items-center justify-between">
+                                <span className="flex items-center gap-2">
+                                    <FiMail className="group-focus-within:text-blue-500 transition-colors" />
+                                    Identity Descriptor
+                                </span>
+                                <span className="text-slate-700 font-mono">TYPE: STRING</span>
                             </label>
                             <input
-                                id="email"
                                 name="email"
                                 type="email"
                                 value={form.email}
                                 onChange={handleInputChange}
-                                placeholder="your.email@romance.com"
-                                className="w-full px-4 py-3 bg-gray-700/80 border border-purple-500/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-white placeholder-purple-300"
+                                placeholder="USER_UID@SYSTEM.LOCAL"
+                                className="w-full bg-slate-900 border border-slate-800 px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-slate-800 text-slate-200"
                                 required
                             />
                         </div>
-                        <div className="space-y-2">
-                            <label htmlFor="password" className="text-sm font-medium text-purple-300 block flex items-center space-x-2">
-                                <FaLock className="text-purple-400" />
-                                <span>Password</span>
+
+                        {/* INPUT: PASSWORD */}
+                        <div className="group space-y-2">
+                            <label className="text-[8px] font-black tracking-[0.3em] text-slate-500 uppercase flex items-center justify-between">
+                                <span className="flex items-center gap-2">
+                                    <FiLock className="group-focus-within:text-blue-500 transition-colors" />
+                                    Passphrase
+                                </span>
+                                <span className="text-slate-700 font-mono">ENCR: AES</span>
                             </label>
                             <input
-                                id="password"
                                 name="password"
                                 type="password"
                                 value={form.password}
                                 onChange={handleInputChange}
-                                placeholder="Enter your secret password"
-                                className="w-full px-4 py-3 bg-gray-700/80 border border-purple-500/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-white placeholder-purple-300"
+                                placeholder="••••••••••••"
+                                className="w-full bg-slate-900 border border-slate-800 px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-slate-800 text-slate-200"
                                 required
                             />
                         </div>
+
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className={`w-full py-4 px-4 rounded-xl font-semibold text-white transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] ${
-                                isLoading 
-                                    ? 'bg-purple-400 cursor-not-allowed' 
-                                    : 'bg-gradient-to-r from-purple-600 to-red-600 hover:shadow-lg hover:shadow-purple-500/50'
-                            }`}
+                            className="w-full bg-slate-100 hover:bg-white text-[#020617] py-4 text-[10px] font-black tracking-[0.5em] uppercase transition-all flex items-center justify-center gap-2 group disabled:opacity-30"
                         >
-                            {isLoading ? (
-                                <div className="flex items-center justify-center space-x-2">
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    <span>Spreading Love...</span>
-                                </div>
-                            ) : (
-                                <div className="flex items-center justify-center space-x-2">
-                                    <FaMusic className="text-sm" />
-                                    <span>Sign In to Your World</span>
-                                </div>
-                            )}
+                            <AnimatePresence mode="wait">
+                                {isLoading ? (
+                                    <motion.div
+                                        key="exec"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <FiActivity className="animate-spin" /> VERIFYING_CHALLENGE
+                                    </motion.div>
+                                ) : (
+                                    <div key="idle" className="flex items-center gap-2">
+                                        Authorize Access <FiChevronRight className="group-hover:translate-x-1 transition-transform" />
+                                    </div>
+                                )}
+                            </AnimatePresence>
                         </button>
                     </form>
-                    <div className="mt-6 text-center">
-                        <button className="text-sm text-purple-300 hover:text-white transition-colors duration-200 hover:underline">
-                            Forgot your password?
+
+                    <div className="mt-6 flex flex-col items-center gap-4">
+                        <button className="text-[9px] font-black tracking-[0.2em] text-slate-600 uppercase hover:text-blue-500 transition-colors flex items-center gap-2">
+                            <FiKey className="text-[10px]" /> Key_Reset_Protocol
+                        </button>
+
+                        <div className="w-full flex items-center gap-4 py-4">
+                            <div className="h-[1px] flex-1 bg-slate-800" />
+                            <span className="text-[8px] font-bold text-slate-700 uppercase tracking-widest">End_of_Terminal</span>
+                            <div className="h-[1px] flex-1 bg-slate-800" />
+                        </div>
+
+                        <button
+                            onClick={handleBackUser}
+                            className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase hover:text-emerald-500 transition-colors"
+                        >
+                            Request New Provisioning // <span className="underline underline-offset-4">Register</span>
                         </button>
                     </div>
-                    <div className="mt-8 pt-6 border-t border-purple-500/30 text-center">
-                        <p className="text-purple-300 text-sm">
-                            Don't have an account?{' '}
-                            <button 
-                                onClick={handleBackUser}
-                                className="font-medium bg-gradient-to-r from-purple-400 to-red-400 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300"
-                            >
-                                Join New
-                            </button>
-                        </p>
+                </div>
+
+                {/* HEARTBEAT FOOTER */}
+                <div className="bg-slate-900 px-6 py-2 border-t border-slate-800 flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                        <div className="h-1 w-1 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                        <span className="text-[8px] font-mono text-slate-500">SECURE_LINK_ESTABLISHED</span>
                     </div>
+                    <span className="text-[8px] font-mono text-slate-600 uppercase">Localhost:8080</span>
                 </div>
-                <div className="text-center mt-6">
-                    <p className="text-purple-400/70 text-sm italic animate-pulse">
-                        "Where every beat tells a love story"
-                    </p>
-                </div>
-                <div className="h-8 md:h-0"></div>
-            </div>
+            </motion.div>
         </div>
     );
 }

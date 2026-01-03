@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { FaMusic } from 'react-icons/fa';
+import { FiMusic, FiLink, FiUser, FiArrowRight, FiActivity } from 'react-icons/fi';
 import api from '@/utils/api';
 
-export default function UploadMusic() {
+export default function AssetIngestionForm() {
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         music_name: '',
@@ -23,7 +23,7 @@ export default function UploadMusic() {
         e.preventDefault();
 
         if (!formData.music_name || !formData.singers || !formData.url) {
-            alert('please fill all required fields');
+            alert('CRITICAL: REQUIRE_ALL_FIELDS_FILLED');
             return;
         }
 
@@ -38,83 +38,111 @@ export default function UploadMusic() {
             });
         } catch (err) {
             console.error(err);
-            alert('failed to upload');
+            alert('INGESTION_FAILURE: SERVER_REJECTED_PACKET');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className='space-y-6 animate-fade-in'>
-            <div className='bg-gray-800/70 backdrop-blur-lg p-6'>
+        <div className='max-w-2xl mx-auto space-y-4 animate-in fade-in duration-500'>
+            <div className='bg-slate-950 border border-slate-800 p-8 relative'>
+                {/* CORNER_ACCENT */}
+                <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-blue-500/20" />
+                
+                <div className="mb-8 flex items-center gap-3">
+                    <div className="w-2 h-6 bg-blue-600" />
+                    <h2 className="text-[10px] font-black tracking-[0.4em] text-slate-500 uppercase">
+                        INGESTION_PROTOCOL_v2.0
+                    </h2>
+                </div>
 
-                <form onSubmit={handleSubmit} className='space-y-6'>
-                    {/* music name */}
-                    <div className='space-y-2'>
-                        <label className='text-purple-300 font-medium'>Song Title</label>
-                        <input
-                            type='text'
-                            name='music_name'
-                            value={formData.music_name}
-                            onChange={handleChange}
-                            placeholder='Enter Song Title'
-                            className='w-full px-4 py-3 bg-gray-700/80 border border-purple-500/30 rounded-xl 
-                                       focus:outline-none focus:ring-2 focus:ring-purple-500 text-white placeholder-purple-300'
-                        />
+                <form onSubmit={handleSubmit} className='space-y-8'>
+                    {/* ENTRY_TITLE */}
+                    <div className='group'>
+                        <label className='text-[9px] font-mono text-slate-500 uppercase tracking-widest mb-2 block group-focus-within:text-blue-500 transition-colors'>
+                            [01] Song_Title_ID
+                        </label>
+                        <div className="relative">
+                            <FiMusic className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-700" />
+                            <input
+                                type='text'
+                                name='music_name'
+                                value={formData.music_name}
+                                onChange={handleChange}
+                                placeholder='ST_NAME_HERE'
+                                className='w-full pl-10 pr-4 py-3 bg-slate-900/50 border border-slate-800 text-[12px] font-mono text-white placeholder-slate-700 focus:outline-none focus:border-blue-500/50 transition-all'
+                            />
+                        </div>
                     </div>
 
-                    {/* singers */}
-                    <div className='space-y-2'>
-                        <label className='text-purple-300 font-medium'>Artists</label>
-                        <input
-                            type='text'
-                            name='singers'
-                            value={formData.singers}
-                            onChange={handleChange}
-                            placeholder='Enter Artists'
-                            className='w-full px-4 py-3 bg-gray-700/80 border border-purple-500/30 rounded-xl 
-                                       focus:outline-none focus:ring-2 focus:ring-purple-500 text-white placeholder-purple-300'
-                        />
+                    {/* CONTRIBUTOR_DATA */}
+                    <div className='group'>
+                        <label className='text-[9px] font-mono text-slate-500 uppercase tracking-widest mb-2 block group-focus-within:text-blue-500 transition-colors'>
+                            [02] Contributor_Strings
+                        </label>
+                        <div className="relative">
+                            <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-700" />
+                            <input
+                                type='text'
+                                name='singers'
+                                value={formData.singers}
+                                onChange={handleChange}
+                                placeholder='ARRAY_OF_ARTISTS'
+                                className='w-full pl-10 pr-4 py-3 bg-slate-900/50 border border-slate-800 text-[12px] font-mono text-white placeholder-slate-700 focus:outline-none focus:border-blue-500/50 transition-all'
+                            />
+                        </div>
                     </div>
 
-                    {/* url */}
-                    <div className='space-y-2'>
-                        <label className='text-purple-300 font-medium'>YouTube Url</label>
-                        <input
-                            type='text'
-                            name='url'
-                            value={formData.url}
-                            onChange={handleChange}
-                            placeholder='Paste YouTube URL'
-                            className='w-full px-4 py-3 bg-gray-700/80 border border-purple-500/30 rounded-xl 
-                                       focus:outline-none focus:ring-2 focus:ring-purple-500 text-white placeholder-purple-300'
-                        />
+                    {/* SOURCE_LINK */}
+                    <div className='group'>
+                        <label className='text-[9px] font-mono text-slate-500 uppercase tracking-widest mb-2 block group-focus-within:text-blue-500 transition-colors'>
+                            [03] External_Source_URI
+                        </label>
+                        <div className="relative">
+                            <FiLink className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-700" />
+                            <input
+                                type='text'
+                                name='url'
+                                value={formData.url}
+                                onChange={handleChange}
+                                placeholder='HTTPS://YOUTU.BE/...'
+                                className='w-full pl-10 pr-4 py-3 bg-slate-900/50 border border-slate-800 text-[12px] font-mono text-white placeholder-slate-700 focus:outline-none focus:border-blue-500/50 transition-all'
+                            />
+                        </div>
                     </div>
 
-                    {/* submit */}
+                    {/* EXECUTE_BUTTON */}
                     <button
                         type='submit'
                         disabled={loading}
-                        className={`w-full py-4 rounded-xl font-semibold text-white transition-all duration-300 
-                                   transform hover:scale-105
-                                   ${loading
-                                ? 'bg-gray-600 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-purple-600 to-red-600 hover:shadow-lg hover:shadow-purple-500/50'
+                        className={`w-full group relative overflow-hidden py-4 border transition-all duration-300 
+                            ${loading
+                                ? 'bg-slate-900 border-slate-800 cursor-not-allowed'
+                                : 'bg-blue-600 border-blue-500 hover:bg-blue-500 hover:shadow-[0_0_20px_rgba(37,99,235,0.4)]'
                             }`}
                     >
-                        {loading ? (
-                            <div className='flex items-center justify-center space-x-2'>
-                                <div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
-                                <span>saving...</span>
-                            </div>
-                        ) : (
-                            <div className='flex items-center justify-center space-x-2'>
-                                <FaMusic />
-                                <span>Add Content</span>
-                            </div>
-                        )}
+                        <div className='flex items-center justify-center space-x-3'>
+                            {loading ? (
+                                <>
+                                    <FiActivity className='w-4 h-4 text-white animate-pulse' />
+                                    <span className='text-[10px] font-black uppercase tracking-[0.3em]'>COMMITTING_TO_DB...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span className='text-[10px] font-black uppercase tracking-[0.3em]'>EXECUTE_INGESTION</span>
+                                    <FiArrowRight className="group-hover:translate-x-2 transition-transform" />
+                                </>
+                            )}
+                        </div>
                     </button>
                 </form>
+            </div>
+            
+            {/* SYSTEM_FOOTER */}
+            <div className="flex justify-between items-center px-2">
+                <span className="text-[7px] font-mono text-slate-700 uppercase">Input_Terminal_01</span>
+                <span className="text-[7px] font-mono text-slate-700 uppercase">Ready_for_stream_input</span>
             </div>
         </div>
     );

@@ -1,11 +1,11 @@
 'use client';
 
-import {
-    FaVideo, FaPhone, FaVideoSlash, FaMicrophoneSlash,
-    FaTimes, FaPhoneSlash, FaMicrophone
-} from 'react-icons/fa';
+import { 
+    FiVideo, FiPhone, FiVideoOff, FiMicOff, 
+    FiX, FiPhoneOff, FiMic, FiAlertTriangle, FiMonitor 
+} from 'react-icons/fi';
 
-export default function CallInterface({
+export default function SignalOverride({
     isInCall,
     isCalling,
     isReceivingCall,
@@ -16,7 +16,6 @@ export default function CallInterface({
     isVideoOff,
     localVideoRef,
     remoteVideoRef,
-    startCall,
     acceptCall,
     rejectCall,
     endCall,
@@ -25,123 +24,137 @@ export default function CallInterface({
 }) {
     return (
         <>
-            {/* Incoming Call Modal */}
+            {/* ALERT: INCOMING_SIGNAL */}
             {isReceivingCall && (
-                <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 backdrop-blur-lg">
-                    <div className="bg-gradient-to-br from-purple-800/90 to-gray-900/90 p-8 rounded-3xl border-2 border-purple-500/50 max-w-md w-full mx-4 shadow-2xl">
-                        <div className="text-center">
-                            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center animate-pulse">
-                                <FaVideo className="text-white text-4xl" />
-                            </div>
-                            <h2 className="text-3xl font-bold text-white mb-3">
-                                Incoming {callType === 'video' ? 'Video' : 'Voice'} Call
-                            </h2>
-                            <p className="text-purple-300 text-lg mb-2">From:</p>
-                            <p className="text-white text-2xl font-semibold mb-8">{callerName}</p>
-                            <div className="flex justify-center space-x-6">
-                                <button
-                                    onClick={rejectCall}
-                                    className="bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white p-5 rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-red-500/50"
-                                >
-                                    <FaPhoneSlash size={28} />
-                                </button>
-                                <button
-                                    onClick={acceptCall}
-                                    className="bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 text-white p-5 rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-green-500/50"
-                                >
-                                    <FaPhone size={28} />
-                                </button>
+                <div className="fixed inset-0 bg-[#020617]/95 flex items-center justify-center z-[100] backdrop-blur-sm">
+                    <div className="w-full max-w-sm border border-blue-500/30 bg-slate-950 p-1">
+                        <div className="border border-blue-500/10 p-8 text-center relative overflow-hidden">
+                            {/* SCANLINE EFFECT */}
+                            <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent h-1/2 animate-pulse pointer-events-none" />
+                            
+                            <div className="relative z-10">
+                                <div className="flex justify-center mb-6">
+                                    <div className="w-16 h-16 border border-blue-500 flex items-center justify-center animate-[ping_2s_infinite]">
+                                        <FiAlertTriangle className="text-blue-500 text-2xl" />
+                                    </div>
+                                </div>
+                                
+                                <h2 className="text-[10px] font-black tracking-[0.5em] text-blue-500 uppercase mb-2">
+                                    Incoming_{callType}_Signal
+                                </h2>
+                                <p className="text-white text-xl font-bold tracking-tighter uppercase mb-8">
+                                    {callerName}
+                                </p>
+                                
+                                <div className="flex justify-center gap-4">
+                                    <button
+                                        onClick={rejectCall}
+                                        className="flex-1 bg-red-950/20 border border-red-900 text-red-500 py-3 text-[10px] font-black tracking-widest hover:bg-red-900 hover:text-white transition-all"
+                                    >
+                                        TERMINATE
+                                    </button>
+                                    <button
+                                        onClick={acceptCall}
+                                        className="flex-1 bg-blue-950/20 border border-blue-900 text-blue-400 py-3 text-[10px] font-black tracking-widest hover:bg-blue-600 hover:text-white transition-all"
+                                    >
+                                        ESTABLISH
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Active Call Interface */}
+            {/* INTERFACE: ACTIVE_OVERRIDE */}
             {isInCall && (
-                <div className="fixed inset-0 bg-black z-40">
-                    {/* Top Bar */}
-                    <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-10">
-                        <div className="bg-black/60 backdrop-blur-md p-4 rounded-2xl border border-purple-500/30">
-                            <p className="text-white font-bold text-lg">
-                                {callType === 'video' ? 'video' : 'voice'} call with {friend.name}
-                            </p>
+                <div className="fixed inset-0 bg-[#020617] z-[90] flex flex-col">
+                    {/* SYSTEM_HEADER */}
+                    <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-[100] bg-gradient-to-b from-black/80 to-transparent">
+                        <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 bg-blue-500 animate-pulse" />
+                            <span className="text-[9px] font-black tracking-[0.3em] text-white uppercase">
+                                SECURE_CHANNEL // {callType}_STREAM // PEER: {friend.name}
+                            </span>
                         </div>
                         <button
                             onClick={endCall}
-                            className="bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white p-4 rounded-full shadow-lg transition-all hover:scale-110"
+                            className="bg-red-600 text-white px-4 py-1.5 text-[10px] font-black tracking-widest hover:bg-red-700 transition-all"
                         >
-                            <FaPhoneSlash size={22} />
+                            DISCONNECT
                         </button>
                     </div>
 
-                    {/* Remote Video */}
-                    <div className="w-full h-full relative">
+                    {/* REMOTE_STREAM_BUFFER */}
+                    <div className="flex-1 relative bg-slate-900 overflow-hidden">
                         <video
                             ref={remoteVideoRef}
                             autoPlay
                             playsInline
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover opacity-80"
                         />
-                        {callType === 'video' && !remoteVideoRef.current?.srcObject && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-                                <div className="text-center">
-                                    <div className="w-32 h-32 mx-auto mb-6 rounded-full bg-gray-800/80 flex items-center justify-center">
-                                        <FaVideo className="text-white text-5xl" />
-                                    </div>
-                                    <p className="text-white text-xl">waiting for {friend.name}'s video...</p>
+                        
+                        {/* FALLBACK: NO_SIGNAL */}
+                        {(!remoteVideoRef.current?.srcObject) && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950">
+                                <FiMonitor className="text-slate-800 text-5xl mb-4 animate-pulse" />
+                                <span className="text-[8px] font-mono text-slate-600 tracking-[0.5em] uppercase">
+                                    Awaiting_Remote_Packet_Stream...
+                                </span>
+                            </div>
+                        )}
+
+                        {/* LOCAL_MONITOR_NODE (PIP) */}
+                        {callType === 'video' && (
+                            <div className="absolute bottom-24 right-6 w-40 h-56 border border-blue-500/40 bg-black shadow-2xl z-[110]">
+                                <div className="absolute top-0 left-0 bg-blue-600 px-2 py-0.5 z-10">
+                                    <span className="text-[7px] font-black text-white uppercase">Local_Node</span>
                                 </div>
+                                <video
+                                    ref={localVideoRef}
+                                    autoPlay
+                                    playsInline
+                                    muted
+                                    className={`w-full h-full object-cover grayscale ${isVideoOff ? 'hidden' : 'block'}`}
+                                />
+                                {isVideoOff && (
+                                    <div className="w-full h-full flex items-center justify-center bg-slate-900">
+                                        <FiVideoOff className="text-slate-700" />
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
 
-                    {/* Local Video Preview (Picture-in-picture) */}
-                    {callType === 'video' && (
-                        <div className="absolute bottom-32 right-6 w-56 h-72 rounded-2xl overflow-hidden border-3 border-purple-500/70 bg-black shadow-2xl">
-                            <video
-                                ref={localVideoRef}
-                                autoPlay
-                                playsInline
-                                muted
-                                className="w-full h-full object-cover"
-                            />
-                            {!localVideoRef.current?.srcObject && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-                                    <FaVideo className="text-white text-3xl" />
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Call Controls */}
-                    <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-6">
+                    {/* COMMAND_CONSOLE */}
+                    <div className="h-20 bg-slate-950 border-t border-slate-800 flex items-center justify-center gap-8 relative z-[100]">
                         <button
                             onClick={toggleMute}
-                            className={`p-5 rounded-full shadow-lg transition-all duration-300 hover:scale-110 ${isMuted
-                                ? 'bg-gradient-to-r from-red-600 to-red-800 hover:shadow-red-500/50'
-                                : 'bg-gradient-to-r from-gray-800/80 to-gray-900/80 hover:shadow-white/20'}`}
+                            className={`flex flex-col items-center gap-1 group transition-all ${isMuted ? 'text-red-500' : 'text-slate-400 hover:text-white'}`}
                         >
-                            {isMuted ? (
-                                <FaMicrophoneSlash className="text-white" size={24} />
-                            ) : (
-                                <FaMicrophone className="text-white" size={24} />
-                            )}
+                            <div className={`w-10 h-10 border flex items-center justify-center transition-all ${isMuted ? 'border-red-500 bg-red-500/10' : 'border-slate-800 group-hover:border-blue-500'}`}>
+                                {isMuted ? <FiMicOff size={16} /> : <FiMic size={16} />}
+                            </div>
+                            <span className="text-[7px] font-black uppercase tracking-widest">{isMuted ? 'MUTED' : 'MIC_ON'}</span>
                         </button>
 
                         {callType === 'video' && (
                             <button
                                 onClick={toggleVideo}
-                                className={`p-5 rounded-full shadow-lg transition-all duration-300 hover:scale-110 ${isVideoOff
-                                    ? 'bg-gradient-to-r from-red-600 to-red-800 hover:shadow-red-500/50'
-                                    : 'bg-gradient-to-r from-gray-800/80 to-gray-900/80 hover:shadow-white/20'}`}
+                                className={`flex flex-col items-center gap-1 group transition-all ${isVideoOff ? 'text-red-500' : 'text-slate-400 hover:text-white'}`}
                             >
-                                {isVideoOff ? (
-                                    <FaVideoSlash className="text-white" size={24} />
-                                ) : (
-                                    <FaVideo className="text-white" size={24} />
-                                )}
+                                <div className={`w-10 h-10 border flex items-center justify-center transition-all ${isVideoOff ? 'border-red-500 bg-red-500/10' : 'border-slate-800 group-hover:border-blue-500'}`}>
+                                    {isVideoOff ? <FiVideoOff size={16} /> : <FiVideo size={16} />}
+                                </div>
+                                <span className="text-[7px] font-black uppercase tracking-widest">{isVideoOff ? 'VIDEO_OFF' : 'CAM_ON'}</span>
                             </button>
                         )}
+                        
+                        <div className="absolute right-8 hidden md:block">
+                            <span className="text-[7px] font-mono text-slate-700 uppercase tracking-widest">
+                                Protocol: WebRTC_P2P // Latency: Stable
+                            </span>
+                        </div>
                     </div>
                 </div>
             )}

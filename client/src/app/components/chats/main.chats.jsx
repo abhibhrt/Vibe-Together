@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaSearch, FaEllipsisV, FaUserFriends } from 'react-icons/fa';
+import { FiSearch, FiMessageSquare, FiUsers, FiActivity, FiArrowRight } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import { useFriendsStore } from '../../../store/useFriendsStore';
 import { useUserStore } from '../../../store/useUserStore';
 import api from '@/utils/api';
+import { motion, AnimatePresence } from 'framer-motion';
 
-export default function MainChats() {
+export default function CommsIndex() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const { friends, setFriends } = useFriendsStore();
@@ -21,9 +22,7 @@ export default function MainChats() {
         try {
             const res = await api.get('/api/friends/getall');
             const data = res.data;
-
             const friendsData = data.friends || [];
-
             const valid = friendsData.filter(f => f.friend !== null);
 
             const list = valid.map(fr => ({
@@ -31,15 +30,15 @@ export default function MainChats() {
                 name: fr.friend.name,
                 email: fr.friend.email,
                 avatar: fr.friend.avatar?.url || '',
-                lastMessage: 'say hi to your new friend!',
-                timestamp: '',
+                lastSignal: 'INIT_SIGNAL_SENT',
+                timestamp: '00:00',
                 isOnline: false,
                 unread: 0
             }));
 
             setFriends(list);
         } catch (err) {
-            console.log(err);
+            console.error('[SIGNAL_ERROR]: Failed to index peers', err);
         }
     };
 
@@ -52,95 +51,110 @@ export default function MainChats() {
     };
 
     return (
-        <div className='flex'>
-            <div className='w-full md:w-96 backdrop-blur-lg border-r border-purple-500/30 flex flex-col'>
-
-                <div className='p-4 border-b border-purple-500/30'>
-                    <div className='flex items-center justify-between'>
-                        <div className='flex-1 max-w-md mr-4'>
-                            <div className='relative'>
-                                <FaSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-purple-400' />
-                                <input
-                                    type='text'
-                                    placeholder='search conversations'
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className='w-full bg-gray-700/80 border border-purple-500/30 rounded-xl pl-10 pr-4 py-2 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300'
-                                />
-                            </div>
-                        </div>
+        <div className='flex h-screen bg-[#020617]'>
+            {/* SIDEBAR MODULE */}
+            <div className='w-full md:w-96 border-r border-slate-800 flex flex-col'>
+                
+                {/* SEARCH MODULE */}
+                <div className='p-6 border-b border-slate-800/50'>
+                    <div className='flex items-center justify-between mb-4'>
+                        <span className='text-[8px] font-black tracking-[0.4em] text-blue-500 uppercase flex items-center gap-2'>
+                            <FiActivity className="animate-pulse" /> Active_Signals
+                        </span>
+                        <span className='text-[7px] font-mono text-slate-700 uppercase'>Idx: {friends.length}</span>
+                    </div>
+                    <div className='relative'>
+                        <FiSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs' />
+                        <input
+                            type='text'
+                            placeholder='FILTER_ACTIVE_LINKS...'
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className='w-full bg-slate-950 border border-slate-800 p-3 pl-10 text-[10px] font-bold tracking-widest text-white uppercase placeholder-slate-800 focus:border-blue-500 outline-none transition-all'
+                        />
                     </div>
                 </div>
 
-                <div className='flex-1 overflow-y-auto'>
-                    {filteredChats.length === 0 ? (
-                        <div className='p-4 text-center text-purple-400'>
-                            {friends.length === 0 ? (
-                                <>
-                                    <FaUserFriends className='mx-auto text-4xl mb-3' />
-                                    <p className='text-lg font-semibold'>No friends found</p>
-                                    <p className='text-sm text-purple-300'>Add new friends to start chatting!</p>
-                                </>
-                            ) : (
-                                <>
-                                    <FaSearch className='mx-auto text-4xl mb-3' />
-                                    <p className='text-lg font-semibold'>No results for "{searchQuery}"</p>
-                                    <p className='text-sm text-purple-300'>Try a different search term.</p>
-                                </>
-                            )}
-                        </div>
-                    ) : (
-                        filteredChats.map(chat => (
-                            <div
-                                key={chat.id}
-                                onClick={() => openChat(chat)}
-                                className='flex bg-gray-800/70 items-center space-x-3 p-4 border-b border-purple-500/10 hover:bg-gray-700/50 transition-all duration-300 cursor-pointer group animate-[fadeIn_0.3s_ease]'
-                            >
-                                <div className='relative'>
-                                    <div className='w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-purple-600 to-red-600 flex items-center justify-center group-hover:scale-105 transition-transform duration-300'>
-                                        {chat.avatar ? (
-                                            <img src={chat.avatar} className='w-full h-full object-cover' />
-                                        ) : (
-                                            <span className='text-white font-semibold'>
-                                                {chat.name.split(' ').map(n => n[0]).join('')}
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    {chat.isOnline && (
-                                        <div className='absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-800'></div>
-                                    )}
-                                </div>
-
-                                <div className='flex-1 min-w-0'>
-                                    <div className='flex items-center justify-between'>
-                                        <h3 className='text-white font-semibold truncate'>{chat.name}</h3>
-                                        <span className='text-purple-300 text-xs whitespace-nowrap'>{chat.timestamp}</span>
-                                    </div>
-
-                                    <div className='flex items-center justify-between'>
-                                        <p className='text-purple-300 text-sm truncate'>{chat.lastMessage}</p>
-
-                                        {chat.unread > 0 && (
-                                            <span className='bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center ml-2'>
-                                                {chat.unread}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
+                {/* SIGNAL LIST */}
+                <div className='flex-1 overflow-y-auto custom-scrollbar'>
+                    <AnimatePresence>
+                        {filteredChats.length === 0 ? (
+                            <div className='p-12 text-center flex flex-col gap-4'>
+                                <FiUsers className='mx-auto text-slate-800 text-3xl' />
+                                <span className='text-[8px] font-black tracking-[0.3em] text-slate-700 uppercase'>
+                                    {friends.length === 0 ? 'Buffer_Empty: No_Peers' : 'Query_Null: No_Matches'}
+                                </span>
                             </div>
-                        ))
-                    )}
+                        ) : (
+                            filteredChats.map(chat => (
+                                <motion.div
+                                    key={chat.id}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    onClick={() => openChat(chat)}
+                                    className='flex items-center space-x-4 p-4 border-b border-slate-900 hover:bg-blue-500/5 transition-all cursor-pointer group'
+                                >
+                                    {/* NODE FRAME */}
+                                    <div className='relative shrink-0'>
+                                        <div className='w-11 h-11 border border-slate-800 bg-slate-950 p-0.5 overflow-hidden transition-all group-hover:border-blue-500/50'>
+                                            {chat.avatar ? (
+                                                <img src={chat.avatar} className='w-full h-full object-cover opacity-60 group-hover:opacity-100' />
+                                            ) : (
+                                                <div className='w-full h-full flex items-center justify-center text-[10px] font-black text-slate-700'>
+                                                    {chat.name[0]}
+                                                </div>
+                                            )}
+                                        </div>
+                                        {chat.isOnline && (
+                                            <div className='absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-blue-500 border-2 border-[#020617]'></div>
+                                        )}
+                                    </div>
+
+                                    <div className='flex-1 min-w-0'>
+                                        <div className='flex items-center justify-between'>
+                                            <h3 className='text-[10px] font-black tracking-widest text-white uppercase truncate group-hover:text-blue-400'>
+                                                {chat.name}
+                                            </h3>
+                                            <span className='text-[7px] font-mono text-slate-600 tracking-tighter'>{chat.timestamp}</span>
+                                        </div>
+
+                                        <div className='flex items-center justify-between mt-1'>
+                                            <p className='text-[9px] font-bold text-slate-500 truncate uppercase tracking-tight'>{chat.lastSignal}</p>
+                                            {chat.unread > 0 && (
+                                                <span className='bg-blue-600 text-white text-[7px] font-black px-1.5 py-0.5'>
+                                                    {chat.unread}_MSG
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
 
-            <div className='hidden md:flex flex-1 items-center justify-center'>
-                <div className='text-center space-y-4'>
-                    <div className='w-24 h-24 bg-gradient-to-br from-purple-600 to-red-600 rounded-2xl flex items-center justify-center mx-auto'>
-                        <FaEllipsisV className='text-white text-3xl' />
+            {/* MAIN DISPLAY MODULE */}
+            <div className='hidden md:flex flex-1 items-center justify-center bg-slate-950/50'>
+                <div className='text-center space-y-6 max-w-sm px-8'>
+                    <div className='relative w-20 h-20 mx-auto'>
+                        <div className='absolute inset-0 border border-slate-800 animate-[spin_10s_linear_infinite]' />
+                        <div className='absolute inset-2 border border-blue-500/20' />
+                        <div className='w-full h-full flex items-center justify-center'>
+                            <FiMessageSquare className='text-blue-500 text-2xl' />
+                        </div>
                     </div>
-                    <h2 className='text-2xl font-bold text-white'>your messages</h2>
-                    <p className='text-purple-300 max-w-md'>send private messages to friends and share your music moments</p>
+                    <div>
+                        <h2 className='text-xs font-black tracking-[0.5em] text-white uppercase'>Encrypted_Signal_Stream</h2>
+                        <p className='text-[9px] font-bold text-slate-500 leading-relaxed uppercase tracking-widest mt-4'>
+                            Select a peer node to initiate data transfer. signal integrity: 100%
+                        </p>
+                    </div>
+                    <div className="pt-4 flex justify-center gap-4">
+                        <div className="h-[1px] w-8 bg-slate-800 self-center" />
+                        <span className="text-[7px] font-mono text-slate-700 uppercase tracking-[0.3em]">Ready_For_Input</span>
+                        <div className="h-[1px] w-8 bg-slate-800 self-center" />
+                    </div>
                 </div>
             </div>
         </div>

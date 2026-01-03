@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link.js';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiUser, FiMail, FiLock, FiActivity, FiShield, FiCpu, FiHash } from 'react-icons/fi';
 import api from '@/utils/api';
 import { useUserStore } from '@/store/useUserStore.js';
-import { FaHeart, FaMusic, FaUser, FaEnvelope, FaLock, FaArrowLeft, FaStar } from 'react-icons/fa';
 
-export default function SignupPage({ handleBackUser }) {
+export default function IdentityProvisioning({ handleBackUser }) {
     const [isLoading, setIsLoading] = useState(false);
     const { setUser } = useUserStore();
     const [form, setForm] = useState({
@@ -21,13 +21,9 @@ export default function SignupPage({ handleBackUser }) {
         try {
             const res = await api.post('/api/users/signup', form);
             setUser(res?.data?.user);
-            setForm({
-                name: '',
-                email: '',
-                password: ''
-            })
+            setForm({ name: '', email: '', password: '' });
         } catch (error) {
-            console.error(error);
+            console.error("[SYSTEM_ERROR]: Provisioning failed", error);
         } finally {
             setIsLoading(false);
         }
@@ -35,139 +31,143 @@ export default function SignupPage({ handleBackUser }) {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setForm(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setForm(prev => ({ ...prev, [name]: value }));
     };
 
     return (
-        <div>
-            <div className="w-full max-w-md animate-fade-in">
-                <div className="bg-gray-800/70 backdrop-blur-lg p-6 md:p-8 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/20">
-                    <div className="text-center mb-8">
-                        <div className="flex justify-center space-x-2 mb-4">
-                            {[1, 2, 3].map((i) => (
-                                <FaHeart 
-                                    key={i}
-                                    className="text-red-400 animate-pulse"
-                                    style={{ animationDelay: `${i * 0.3}s` }}
-                                />
-                            ))}
+        <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4 font-sans text-slate-300">
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full max-w-md border border-slate-800 bg-slate-900/50 backdrop-blur-md rounded-sm overflow-hidden"
+            >
+                {/* STATUS BAR */}
+                <div className="border-b border-slate-800 px-6 py-3 flex justify-between items-center bg-slate-900">
+                    <div className="flex items-center gap-3">
+                        <div className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                         </div>
-                        <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-300 to-red-300 bg-clip-text text-transparent mb-2 transition-transform duration-300 hover:scale-105">
-                            Start Your Love Story
-                        </h1>
-                        <p className="text-purple-300 text-sm md:text-base">
-                            Join our musical world today
-                        </p>
+                        <span className="text-[10px] font-black tracking-[0.4em] text-slate-500 uppercase">
+                            System Status: Active
+                        </span>
                     </div>
+                    <FiCpu className="text-slate-600 text-xs" />
+                </div>
+
+                <div className="p-8">
+                    <header className="mb-10">
+                        <h1 className="text-xl font-bold tracking-[0.2em] text-white uppercase mb-1">
+                            Identity Provisioning
+                        </h1>
+                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                            Establishing New Directory Entry // Unit_001
+                        </p>
+                    </header>
+
+                    {/* DATA INGESTION TERMINAL */}
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="space-y-2">
-                            <label htmlFor="name" className="text-sm font-medium text-purple-300 block flex items-center space-x-2">
-                                <FaUser className="text-purple-400" />
-                                <span>Your Beautiful Name</span>
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black tracking-[0.3em] text-slate-500 uppercase flex items-center gap-2">
+                                <FiUser className="text-blue-500" /> System Alias
                             </label>
                             <input
-                                id="name"
                                 name="name"
                                 type="text"
                                 value={form.name}
                                 onChange={handleInputChange}
-                                placeholder="What should we call you?"
-                                className="w-full px-4 py-3 bg-gray-700/80 border border-purple-500/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-white placeholder-purple-300"
+                                placeholder="INPUT_NAME_STRING"
+                                className="w-full bg-[#020617] border border-slate-800 px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors placeholder:text-slate-700 text-slate-200"
                                 required
                             />
                         </div>
-                        <div className="space-y-2">
-                            <label htmlFor="email" className="text-sm font-medium text-purple-300 block flex items-center space-x-2">
-                                <FaEnvelope className="text-purple-400" />
-                                <span>Email Address</span>
+
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black tracking-[0.3em] text-slate-500 uppercase flex items-center gap-2">
+                                <FiMail className="text-blue-500" /> Comms Protocol (Email)
                             </label>
                             <input
-                                id="email"
                                 name="email"
                                 type="email"
                                 value={form.email}
                                 onChange={handleInputChange}
-                                placeholder="your.unique@email.com"
-                                className="w-full px-4 py-3 bg-gray-700/80 border border-purple-500/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-white placeholder-purple-300"
+                                placeholder="USER@NETWORK.INT"
+                                className="w-full bg-[#020617] border border-slate-800 px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors placeholder:text-slate-700 text-slate-200"
                                 required
                             />
                         </div>
-                        <div className="space-y-2">
-                            <label htmlFor="password" className="text-sm font-medium text-purple-300 block flex items-center space-x-2">
-                                <FaLock className="text-purple-400" />
-                                <span>Secret Password</span>
+
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black tracking-[0.3em] text-slate-500 uppercase flex items-center gap-2">
+                                <FiLock className="text-blue-500" /> Encryption Key
                             </label>
                             <input
-                                id="password"
                                 name="password"
                                 type="password"
                                 value={form.password}
                                 onChange={handleInputChange}
-                                placeholder="Create your magical password"
-                                className="w-full px-4 py-3 bg-gray-700/80 border border-purple-500/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 text-white placeholder-purple-300"
+                                placeholder="••••••••••••"
+                                className="w-full bg-[#020617] border border-slate-800 px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors placeholder:text-slate-700 text-slate-200"
                                 required
                             />
                         </div>
+
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className={`w-full py-4 px-4 rounded-xl font-semibold text-white transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] ${
-                                isLoading 
-                                    ? 'bg-purple-400 cursor-not-allowed' 
-                                    : 'bg-gradient-to-r from-purple-600 to-red-600 hover:shadow-lg hover:shadow-purple-500/50'
-                            }`}
+                            className="w-full relative group overflow-hidden bg-blue-600 py-4 text-[10px] font-black tracking-[0.5em] text-white uppercase transition-all hover:bg-blue-500 active:scale-[0.99] disabled:opacity-50"
                         >
-                            {isLoading ? (
-                                <div className="flex items-center justify-center space-x-2">
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    <span>Creating Magic...</span>
-                                </div>
-                            ) : (
-                                <div className="flex items-center justify-center space-x-2">
-                                    <FaHeart className="text-sm" />
-                                    <span>Begin Your Journey</span>
-                                </div>
-                            )}
+                            <AnimatePresence mode="wait">
+                                {isLoading ? (
+                                    <motion.div
+                                        key="loading"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        className="flex items-center justify-center gap-2"
+                                    >
+                                        <FiActivity className="animate-spin" />
+                                        <span>Executing_Provisioning...</span>
+                                    </motion.div>
+                                ) : (
+                                    <span key="idle">Initialize Registry</span>
+                                )}
+                            </AnimatePresence>
                         </button>
                     </form>
-                    <div className="mt-6 grid grid-cols-2 gap-3 text-center">
+
+                    {/* SYSTEM SPECS / METADATA */}
+                    <div className="mt-10 grid grid-cols-2 gap-[1px] bg-slate-800 border border-slate-800">
                         {[
-                            { icon: FaMusic, text: 'Unlimited Songs' },
-                            { icon: FaHeart, text: 'Personalized' },
-                            { icon: FaStar, text: 'Premium Quality' },
-                            { icon: FaUser, text: 'Your Profile' }
-                        ].map((benefit, index) => (
-                            <div 
-                                key={benefit.text}
-                                className="flex items-center space-x-2 justify-center p-2 bg-purple-900/30 rounded-lg border border-purple-500/20 transition-all duration-300 hover:scale-105"
-                            >
-                                <benefit.icon className="text-purple-400 text-xs" />
-                                <span className="text-purple-300 text-xs">{benefit.text}</span>
+                            { icon: FiActivity, label: 'Real-time sync' },
+                            { icon: FiShield, label: 'AES-256 Enc' },
+                            { icon: FiHash, label: 'Index Matrix' },
+                            { icon: FiUser, label: 'Single Node' }
+                        ].map((spec, i) => (
+                            <div key={i} className="bg-[#020617] p-3 flex flex-col items-center justify-center gap-2 hover:bg-slate-900 transition-colors group">
+                                <spec.icon className="text-slate-600 group-hover:text-blue-500 transition-colors text-xs" />
+                                <span className="text-[8px] font-black tracking-widest text-slate-500 uppercase text-center">
+                                    {spec.label}
+                                </span>
                             </div>
                         ))}
                     </div>
-                    <div className="mt-8 pt-6 border-t border-purple-500/30 text-center">
-                        <p className="text-purple-300 text-sm">
-                            Already have an account?{' '}
-                            <button 
-                                onClick={handleBackUser}
-                                className="font-medium bg-gradient-to-r from-purple-400 to-red-400 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300"
-                            >
-                                Signin
-                            </button>
-                        </p>
+
+                    <div className="mt-8 pt-6 border-t border-slate-800 flex justify-center">
+                        <button
+                            onClick={handleBackUser}
+                            className="text-[9px] font-bold text-slate-500 tracking-[0.2em] uppercase hover:text-blue-400 transition-colors flex items-center gap-2"
+                        >
+                            Existing Identity? <span className="text-blue-500">Log_In</span>
+                        </button>
                     </div>
                 </div>
-                <div className="text-center mt-6">
-                    <p className="text-purple-400/70 text-sm italic animate-pulse">
-                        "Every great love story starts with a beautiful beginning"
-                    </p>
+
+                {/* FOOTER METRICS */}
+                <div className="bg-slate-900/80 px-6 py-2 border-t border-slate-800 flex justify-between">
+                    <span className="text-[8px] font-mono text-slate-600">LATENCY: 14ms</span>
+                    <span className="text-[8px] font-mono text-slate-600">VER: 4.0.2-INSTITUTIONAL</span>
                 </div>
-                <div className="h-8 md:h-0"></div>
-            </div>
+            </motion.div>
         </div>
     );
 }
